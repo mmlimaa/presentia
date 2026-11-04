@@ -1,0 +1,103 @@
+﻿{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content_logado %}
+<div class="mb-8">
+    <h2 class="text-2xl font-bold text-gray-800">Olá, {{ request.session.usuario_nome }}!</h2>
+    <p class="text-gray-500 mt-1">Bem-vindo(a) ao Presentia. Aqui está o resumo do seu seminário hoje.</p>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <!-- Card Alunos -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+        <div class="p-4 rounded-full bg-blue-100 text-blue-600 mr-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500 uppercase">Alunos Regulares</p>
+            <p class="text-3xl font-bold text-gray-800">{{ total_alunos }}</p>
+        </div>
+    </div>
+
+    <!-- Card Núcleos -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+        <div class="p-4 rounded-full bg-green-100 text-green-600 mr-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500 uppercase">Núcleos Ativos</p>
+            <p class="text-3xl font-bold text-gray-800">{{ total_nucleos }}</p>
+        </div>
+    </div>
+
+    <!-- Card Aulas -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 flex items-center">
+        <div class="p-4 rounded-full bg-purple-100 text-purple-600 mr-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        </div>
+        <div>
+            <p class="text-sm font-medium text-gray-500 uppercase">Aulas Lançadas</p>
+            <p class="text-3xl font-bold text-gray-800">{{ total_aulas }}</p>
+        </div>
+    </div>
+</div>
+
+<!-- Ações e Últimas Chamadas -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    
+    <!-- Coluna Esquerda: Atalhos Rápidos -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+            <h3 class="text-lg font-bold text-gray-800 mb-4">Ações Rápidas</h3>
+            <div class="space-y-3">
+                <a href="{% url 'frequencia_lista' %}" class="flex items-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow transition">
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Lançar Chamada do Dia
+                </a>
+                <a href="{% url 'nucleos_lista' %}" class="flex items-center w-full bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-medium py-3 px-4 rounded-lg transition">
+                    <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Gerenciar Alunos e Núcleos
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Direita: Últimas Aulas -->
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Últimas Chamadas Lançadas</h3>
+                <a href="{% url 'consulta_frequencia' %}" class="text-sm text-blue-600 hover:underline">Ver Relatórios</a>
+            </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="text-gray-500 text-xs uppercase tracking-wider">
+                        <th class="py-3 px-6 font-semibold">Data</th>
+                        <th class="py-3 px-6 font-semibold">Núcleo</th>
+                        <th class="py-3 px-6 font-semibold">Tópico</th>
+                        <th class="py-3 px-6 font-semibold text-right">Ação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for aula in ultimas_aulas %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-3 px-6 font-medium text-gray-800">{{ aula.data|date:"d/m/Y" }}</td>
+                        <td class="py-3 px-6 text-gray-600">{{ aula.nucleo.nome }}</td>
+                        <td class="py-3 px-6 text-gray-500 text-sm">{{ aula.topico|default:"Aula Regular" }}</td>
+                        <td class="py-3 px-6 text-right">
+                            <a href="{% url 'chamada_nucleo' aula.nucleo.id %}?data={{ aula.data|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar Chamada</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="py-8 text-center text-gray-500">Nenhuma aula lançada recentemente.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+

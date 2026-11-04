@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Lançar Chamada{% endblock %}
+{% block content_logado %}
+<div class="mb-6">
+    <a href="{% url 'frequencia_lista' %}" class="text-sm text-blue-600 hover:underline mb-2 inline-block">&larr; Voltar para Frequência</a>
+    <h3 class="text-2xl font-bold text-gray-800">Chamada: {{ turma.nome }}</h3>
+    <p class="text-gray-500 text-sm">Núcleo: {{ nucleo.nome }} | Curso: {{ turma.curso.nome }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6 flex items-center justify-between">
+    <!-- Formulario de Data (Mantem a Turma) -->
+    <form method="GET" class="flex items-center space-x-4">
+        <input type="hidden" name="turma" value="{{ turma.id }}">
+        <label class="font-medium text-gray-700">Data da Aula:</label>
+        <input type="date" name="data" value="{{ data_str }}" class="px-4 py-2 border rounded-lg focus:ring-blue-500" onchange="this.form.submit()">
+    </form>
+    
+    {% if messages %}
+        {% for message in messages %}
+        <span class="text-green-600 font-medium text-sm alert-message">{{ message }}</span>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<form method="POST" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    {% csrf_token %}
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                <th class="py-3 px-6 font-semibold">Aluno Regular</th>
+                <th class="py-3 px-6 font-semibold">Status da Presença</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for freq in frequencias %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="py-4 px-6 font-medium text-gray-800">{{ freq.matricula.aluno.nome }}</td>
+                <td class="py-4 px-6">
+                    <!-- Input hidden que será enviado -->
+                    <input type="hidden" name="status_{{ freq.id }}" id="input_{{ freq.id }}" value="{{ freq.status }}">
+                    
+                    <div class="inline-flex rounded-lg border border-gray-300 shadow-sm" role="group">
+                        <button type="button" onclick="setStatus('{{ freq.id }}', 'presente')" id="btn_presente_{{ freq.id }}" 
+                            class="px-4 py-1.5 text-sm font-semibold rounded-l-lg border-r border-gray-300 transition-colors focus:outline-none 
+                            {% if freq.status == 'presente' %}bg-green-600 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+                            Presente
+                        </button>
+                        
+                        <button type="button" onclick="setStatus('{{ freq.id }}', 'ausente')" id="btn_ausente_{{ freq.id }}" 
+                            class="px-4 py-1.5 text-sm font-semibold border-r border-gray-300 transition-colors focus:outline-none
+                            {% if freq.status == 'ausente' %}bg-red-600 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+                            Ausente
+                        </button>
+                        
+                        <button type="button" onclick="setStatus('{{ freq.id }}', 'justificada')" id="btn_justificada_{{ freq.id }}" 
+                            class="px-4 py-1.5 text-sm font-semibold rounded-r-lg transition-colors focus:outline-none
+                            {% if freq.status == 'justificada' %}bg-gray-900 text-white{% else %}bg-white text-gray-600 hover:bg-gray-100{% endif %}">
+                            Justificada
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="2" class="py-8 text-center text-gray-500">Nenhum aluno regular ativo nesta turma.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    <div class="p-6 bg-gray-50 border-t border-gray-200 flex justify-end">
+        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Salvar Chamada</button>
+    </div>
+</form>
+
+{% if experimentais %}
+<div class="mt-8">
+    <h4 class="text-lg font-semibold text-gray-700 mb-3">Visitas Experimentais nesta data</h4>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                    <th class="py-3 px-6 font-semibold">Nome</th>
+                    <th class="py-3 px-6 font-semibold">Celular</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for exp in experimentais %}
+                <tr><td class="py-3 px-6">{{ exp.nome_completo }}</td><td class="py-3 px-6">{{ exp.celular }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<script>
+    function setStatus(freqId, status) {
+        document.getElementById('input_' + freqId).value = status;
+        
+        const btnPresente = document.getElementById('btn_presente_' + freqId);
+        const btnAusente = document.getElementById('btn_ausente_' + freqId);
+        const btnJustificada = document.getElementById('btn_justificada_' + freqId);
+        
+        // Reseta todos
+        btnPresente.className = "px-4 py-1.5 text-sm font-semibold rounded-l-lg border-r border-gray-300 transition-colors focus:outline-none bg-white text-gray-600 hover:bg-gray-100";
+        btnAusente.className = "px-4 py-1.5 text-sm font-semibold border-r border-gray-300 transition-colors focus:outline-none bg-white text-gray-600 hover:bg-gray-100";
+        btnJustificada.className = "px-4 py-1.5 text-sm font-semibold rounded-r-lg transition-colors focus:outline-none bg-white text-gray-600 hover:bg-gray-100";
+
+        // Aplica a cor no selecionado
+        if (status === 'presente') {
+            btnPresente.className = "px-4 py-1.5 text-sm font-semibold rounded-l-lg border-r border-gray-300 transition-colors focus:outline-none bg-green-600 text-white";
+        } else if (status === 'ausente') {
+            btnAusente.className = "px-4 py-1.5 text-sm font-semibold border-r border-gray-300 transition-colors focus:outline-none bg-red-600 text-white";
+        } else if (status === 'justificada') {
+            btnJustificada.className = "px-4 py-1.5 text-sm font-semibold rounded-r-lg transition-colors focus:outline-none bg-gray-900 text-white";
+        }
+    }
+</script>
+{% endblock %}

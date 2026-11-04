@@ -1,0 +1,130 @@
+{% load static %}
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><img src="{% static 'logosistema.png' %}" alt="Presentia" class="h-20 w-auto max-w-full object-contain"></title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        /* Trava a tela inteira, ignorando o navegador */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans antialiased text-gray-800">
+    
+    {% if request.session.usuario_id %}
+    <!-- LAYOUT LOGADO (Sidebar + Conteúdo) -->
+    <div class="fixed inset-0 flex">
+        
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white flex flex-col flex-shrink-0 h-full">
+            <div class="h-28 flex items-center justify-center border-b border-slate-800 px-4">
+                <div class="bg-white p-2 rounded-lg shadow-sm">
+                    <img src="{% static 'logosistema.png' %}" alt="Presentia" class="h-16 w-auto object-contain">
+                </div>
+            </div>
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <a href="{% url 'dashboard' %}" class="block px-4 py-2.5 rounded-lg {% if request.resolver_match.url_name == 'dashboard' %}bg-slate-800 text-white font-medium{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">Dashboard</a>
+                
+                <a href="{% url 'igrejas_lista' %}" class="block px-4 py-2.5 rounded-lg {% if 'igrejas' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">Igrejas</a>
+                <a href="{% url 'nucleos_lista' %}" class="block px-4 py-2.5 rounded-lg {% if 'nucleos' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">Núcleos</a>
+                <a href="{% url 'turmas_lista' %}" class="block px-4 py-2.5 rounded-lg {% if 'turmas' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">Turmas</a>
+                <a href="{% url 'frequencia_lista' %}" class="block px-4 py-2.5 rounded-lg {% if 'frequencia' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">Aulas e Frequência</a>
+                <!-- Submenu de Consultas com Alpine.js -->
+<div x-data="{ open: {% if 'consulta' in request.path %}true{% else %}false{% endif %} }">
+    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg {% if 'consulta' in request.path %}text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+        <span class="font-medium">Consultas</span>
+        <svg :class="{'rotate-180': open, 'transform': true}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+    </button>
+    <div x-show="open" class="mt-1 space-y-1 pl-4">
+        <a href="{% url 'consulta_frequencia' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'consulta' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">
+            Lista de Presença - Extrato mensal
+        </a>
+        <!-- Futuros relatórios entram aqui -->
+    </div>
+</div>
+
+                {% if request.session.usuario_is_admin %}
+                {% if request.session.usuario_is_admin %}
+                {% endif %}
+                {% endif %}
+
+                {% if request.session.usuario_is_admin %}
+                <!-- Submenu de Administração -->
+                <div x-data="{ open: {% if 'solicitacoes' in request.path or 'usuarios' in request.path %}true{% else %}false{% endif %} }">
+                    <button @click="open = !open" class="w-full flex items-center justify-between px-4 py-2.5 rounded-lg {% if 'solicitacoes' in request.path or 'usuarios' in request.path %}text-white{% else %}text-slate-300 hover:bg-slate-800 hover:text-white{% endif %} transition">
+                        <span class="font-medium">Administração</span>
+                        <svg :class="{'rotate-180': open, 'transform': true}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="open" class="mt-1 space-y-1 pl-4" style="display: none;">
+                        <a href="{% url 'gerenciar_solicitacoes' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'solicitacoes' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">
+                            Solicitações de Acesso
+                        </a>
+                        <a href="{% url 'gerenciar_usuarios' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'usuarios' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">
+                            Usuários
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </nav>
+            <div class="p-4 border-t border-slate-800 flex-shrink-0">
+                <div class="text-sm text-slate-400">Logado como:</div>
+                <div class="font-medium text-white truncate">{{ request.session.usuario_nome }}</div>
+                <a href="{% url 'logout' %}" class="text-xs text-red-400 hover:text-red-300 mt-2 block font-semibold">Sair do sistema</a>
+            </div>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+            <header class="h-16 bg-white shadow-sm flex items-center px-8 flex-shrink-0 z-10">
+                <h2 class="text-lg font-semibold text-gray-700">
+                    {% block title %}Dashboard{% endblock %}
+                </h2>
+            </header>
+            
+            <div class="flex-1 overflow-y-auto p-8 bg-gray-100 relative">
+                {% block content_logado %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    {% else %}
+    <!-- LAYOUT DESLOGADO (Tela cheia para Login) -->
+    <div class="fixed inset-0 flex items-center justify-center bg-gray-100">
+        {% block content_deslogado %}{% endblock %}
+    </div>
+    {% endif %}
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Procura todos os alertas de mensagem
+            const alerts = document.querySelectorAll('.alert-message');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    // Adiciona efeito de fade out suave
+                    alert.style.transition = 'opacity 0.5s ease';
+                    alert.style.opacity = '0';
+                    // Remove o elemento da tela após o fade
+                    setTimeout(() => alert.remove(), 500);
+                }, 3000); // 3000 milissegundos = 3 segundos
+            });
+        });
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+

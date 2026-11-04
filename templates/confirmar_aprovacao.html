@@ -1,0 +1,17 @@
+﻿{% extends "base.html" %}
+{% block title %}Aprovar SolicitaÃ§Ã£o{% endblock %}
+{% block content_logado %}
+<div class="max-w-lg mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center">
+    <div class="text-green-500 mb-4">
+        <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    </div>
+    <h3 class="text-2xl font-bold text-gray-800 mb-2">Aprovar Acesso?</h3>
+    <p class="text-gray-600 mb-6">VocÃª estÃ¡ prestes a criar um usuÃ¡rio para <strong>{{ solicitacao.nome_completo }}</strong> ({{ solicitacao.login }}).</p>
+    
+    <form method="POST" class="flex justify-center space-x-4">
+        {% csrf_token %}
+        <a href="{% url 'gerenciar_solicitacoes' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-6 rounded-lg transition">Cancelar</a>
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">Sim, Aprovar</button>
+    </form>
+</div>
+{% endblock %}

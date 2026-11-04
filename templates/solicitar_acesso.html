@@ -1,0 +1,32 @@
+﻿{% extends "base.html" %}
+{% block title %}Solicitar Acesso{% endblock %}
+
+{% block content_deslogado %}
+<div class="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8">
+    <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold text-slate-900">SolicitaÃ§Ã£o de Acesso</h1>
+        <p class="text-gray-500 text-sm mt-1">Preencha os dados para ser autorizado pela coordenaÃ§Ã£o.</p>
+    </div>
+
+    <form class="space-y-4" method="POST">
+        {% csrf_token %}
+        
+        {% for field in form %}
+        <div>
+            <label class="block text-sm font-medium text-gray-700">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <div class="pt-4 flex items-center justify-between">
+            <a href="{% url 'login' %}" class="text-sm text-gray-500 hover:text-gray-800">Voltar ao Login</a>
+            <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+                Enviar SolicitaÃ§Ã£o
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Presentia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans antialiased text-gray-800 h-screen overflow-hidden">
+    <div class="h-screen w-full flex items-center justify-center bg-gray-100">
+        <div class="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 space-y-6">
+            <div class="text-center">
+                <!-- LOGO AQUI -->
+                <img src="{% static 'logosistema.png' %}" alt="Presentia" class="mx-auto h-20 w-auto mb-4 object-contain">
+                <p class="text-gray-500 mt-2">Acesse o painel administrativo</p>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert-message bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                    <span class="block sm:inline">{{ message }}</span>
+                </div>
+                {% endfor %}
+            {% endif %}
+
+            <form class="space-y-4" method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Usuário</label>
+                    <input type="text" name="username" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Seu login">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Senha</label>
+                    <input type="password" name="password" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Sua senha">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-md transition duration-200">
+                    Entrar
+                </button>
+            </form>
+            <div class="text-center text-sm text-gray-500">
+                Ainda não tem acesso? <a href="{% url 'solicitar_acesso' %}" class="text-blue-600 hover:underline font-semibold">Solicitar Acesso</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,42 @@
+﻿{% extends "base.html" %}
+{% block title %}Gestão de Igrejas{% endblock %}
+{% block content_logado %}
+<div class="flex justify-between items-center mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">Igrejas Parceiras</h3>
+    <a href="{% url 'igreja_nova' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition">Nova Igreja</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert-message {% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-green-100 border-green-400 text-green-700{% endif %} border px-4 py-3 rounded mb-4">{{ message }}</div>
+    {% endfor %}
+{% endif %}
+
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <table class="w-full text-left border-collapse">
+        <thead>
+            <tr class="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                <th class="py-3 px-6 font-semibold">Nome</th>
+                <th class="py-3 px-6 font-semibold">Cidade</th>
+                <th class="py-3 px-6 font-semibold">Endereço</th>
+                <th class="py-3 px-6 font-semibold text-right">Ações</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+            {% for igreja in igrejas %}
+            <tr class="hover:bg-gray-50 transition">
+                <td class="py-4 px-6 font-medium text-gray-800">{{ igreja.nome }}</td>
+                <td class="py-4 px-6 text-gray-600">{{ igreja.cidade }}</td>
+                <td class="py-4 px-6 text-gray-600">{{ igreja.endereco }}</td>
+                <td class="py-4 px-6 text-right space-x-2">
+                    <a href="{% url 'editar_igreja' igreja.id %}" class="text-blue-600 hover:text-blue-800 font-medium text-sm">Editar</a>
+                    <a href="{% url 'excluir_igreja' igreja.id %}" class="text-red-600 hover:text-red-800 font-medium text-sm">Excluir</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4" class="py-8 text-center text-gray-500">Nenhuma igreja cadastrada.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

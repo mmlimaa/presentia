@@ -1,0 +1,61 @@
+📄 Prompt de Continuidade — Projeto Presentia
+Instrução para a próxima IA: Leia atentamente o contexto abaixo para retomarmos o desenvolvimento do sistema Presentia (antigo FVCPresenca). O projeto está em estágio avançado, funcional e seguro.
+
+🎯 Visão Geral do Projeto
+Nome: Presentia (Sistema de Controle de Frequência - FVC).
+Domínio: Seminário teológico com cursos sequenciais (Bíblica, Sistemática, Ministerial) realizados em núcleos (igrejas).
+Hierarquia: Igreja > Núcleo > Turma > Aluno > Frequência.
+Operação: Apenas a Secretaria acessa o sistema. O sistema é "Headless" (sem migrations do Django, tabelas gerenciadas manualmente no PostgreSQL 17.11).
+
+Stack Atual:
+
+Linguagem: Python 3.12
+
+Framework: Django 5.2
+
+Banco de Dados: PostgreSQL 17.11 (Windows)
+
+Frontend: Django Templates + Tailwind CSS (via CDN) + Alpine.js
+
+Ambiente: Poetry (com venv manual por conta de bug no Windows)
+
+Localização: C:\Python\Presentia
+
+✅ O Que Já Está Pronto e Funcionando
+Autenticação: Login customizado, logout, solicitação de acesso e aprovação/recusa de solicitações.
+
+Dashboard Executivo: Cards de estatísticas (Alunos, Núcleos, Aulas) e últimas aulas lançadas.
+
+Gestão de Usuários: Listagem, edição, reset de senha e exclusão (com bloqueio de auto-exclusão).
+
+Gestão de Igrejas: CRUD completo (Editar/Excluir com bloqueio se houver núcleos vinculados).
+
+Gestão de Núcleos: Cadastro e listagem com contagem de alunos e turmas (contagem via SQL puro para contornar bug do ORM).
+
+Gestão de Turmas: CRUD completo (Nome, Núcleo, Curso, Data Início, Data Fim) com bloqueio de exclusão se houver alunos.
+
+Gestão de Alunos por Turma: Matrícula regular, aula experimental, status ativo/inativo (desligar/reativar), filtros e edição de dados.
+
+Lançamento de Chamada: Tela com botões coloridos (P, A, J), seletor de data dinâmico (mantém a turma) e salvamento em lote.
+
+Relatórios: Filtros em cascata (Igreja > Núcleo > Turma). Grade visual por mês (Aluno x Dias) e exportação para PDF com o mesmo layout.
+
+Carga de Dados: Importação de 61 alunos e 1.423 registros de frequência da planilha real da FVC.
+
+Segurança: .pgpass configurado, senhas criptografadas e .gitignore protegendo dados sensíveis.
+
+Backup: Script backup.bat funcional gerando arquivos .sql na pasta backups.
+
+Visual: Logo no menu lateral e tela de login, design moderno com Tailwind.
+
+🚀 Próximos Passos Sugeridos
+Atualizar o GitHub com a versão final do projeto (renomeado para Presentia).
+
+Automatizar o Backup via Task Scheduler do Windows.
+
+Relatório de Alerta (alunos com frequência abaixo de 75%).
+
+Deploy em Produção (Railway, Render, etc.).
+
+Instrução para a nova sessão:
+"Estamos retomando o projeto Presentia. O sistema está 100% funcional, com banco de dados customizado, gestão completa, chamadas, relatórios em PDF e backup. O código está no GitHub. Me ajude a atualizar o repositório e, depois, a implementar a próxima melhoria."

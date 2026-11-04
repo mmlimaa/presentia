@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Lista de Presença - Extrato Mensal{% endblock %}
+{% block content_logado %}
+<div class="mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">Consultas e Relatórios</h3>
+    <p class="text-gray-500 text-sm">Filtre as frequências por turma e aluno.</p>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+    <form method="GET" class="flex flex-col gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Igreja</label>
+                <select name="igreja" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500" onchange="this.form.submit()">
+                    <option value="">Todas</option>
+                    {% for ig in igrejas %}
+                    <option value="{{ ig.id }}" {% if igreja_id == ig.id|stringformat:"s" %}selected{% endif %}>{{ ig.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Núcleo</label>
+                <select name="nucleo" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500" onchange="this.form.submit()">
+                    <option value="">Selecione</option>
+                    {% for nuc in nucleos %}
+                    <option value="{{ nuc.id }}" {% if nucleo_id == nuc.id|stringformat:"s" %}selected{% endif %}>{{ nuc.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Turma</label>
+                <select name="turma" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500">
+                    <option value="">Selecione</option>
+                    {% for t in turmas %}
+                    <option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="flex items-end gap-4 mt-2">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Aluno (Opcional)</label>
+                <input type="text" name="aluno_nome" value="{{ aluno_nome|default_if_none:"" }}" placeholder="Digite o nome para filtrar..." class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500">
+            </div>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-8 rounded-lg shadow transition h-10">
+                Visualizar Relatório
+            </button>
+        </div>
+    </form>
+</div>
+
+{% if gerado %}
+<div class="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
+    
+    <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold text-slate-800">Lista de Presença - Extrato mensal</h2>
+        <h4 class="text-lg font-semibold text-gray-600 mt-1">{{ turma.nome }} - {{ turma.curso.nome }}</h4>
+        <p class="text-sm text-gray-500">Período da Turma: {{ data_ini_formatada }} a {{ data_fim_formatada }}</p>
+    </div>
+    
+    <div class="flex justify-end mb-4">
+        <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=pdf" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg shadow transition flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            Exportar PDF
+        </a>
+    </div>
+
+    <!-- Tabela por Mês -->
+    {% for bloco in blocos %}
+    <div class="mb-10">
+        <h4 class="text-xl font-bold text-slate-700 bg-gray-100 p-3 rounded-lg mb-3">{{ bloco.mes_ano }}</h4>
+        
+        <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full text-left border-collapse text-sm">
+                <thead>
+                    <!-- Linha 1: Título Dias de Aula -->
+                    <tr class="bg-slate-700 text-white">
+                        <th class="py-2 px-4 border border-slate-600">Aluno</th>
+                        <th colspan="{{ bloco.dias|length }}" class="py-2 px-4 border border-slate-600 text-center">Dias de Aula</th>
+                    </tr>
+                    <!-- Linha 2: Dias -->
+                    <tr class="bg-slate-800 text-white">
+                        <th class="py-2 px-4 border border-slate-700"></th>
+                        {% for dia in bloco.dias %}
+                        <th class="py-2 px-2 border border-slate-700 text-center w-12">{{ dia }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for aluno in bloco.alunos %}
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="py-2 px-4 border border-gray-200 font-medium text-gray-800">{{ aluno.nome }}</td>
+                        {% for d in aluno.dias %}
+                        <td class="py-2 px-2 border border-gray-200 text-center font-bold {{ d.cor }}">
+                            {{ d.status }}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-center text-gray-500 py-8">Nenhum registro encontrado para esta turma.</p>
+    {% endfor %}
+    
+    <div class="mt-6 flex space-x-6 text-sm font-semibold border-t pt-4">
+        <span class="text-green-600">P = Presente</span>
+        <span class="text-red-600">A = Ausente</span>
+        <span class="text-black">J = Justificada</span>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
