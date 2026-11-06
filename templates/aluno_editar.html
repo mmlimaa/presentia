@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Editar Aluno{% endblock %}
 {% block content_logado %}
 <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200">
@@ -9,7 +9,11 @@
 
     <form method="POST" class="space-y-5">
         {% csrf_token %}
+        
+        <!-- Campos ocultos para manter o contexto -->
         <input type="hidden" name="nucleo_id" value="{{ nucleo.id|default:'' }}">
+        <input type="hidden" name="turma_id" value="{{ turma_id|default:'' }}">
+        <input type="hidden" name="origem" value="{{ origem|default:'' }}">
         
         {% for field in form %}
         <div>
@@ -22,12 +26,16 @@
         {% endfor %}
 
         <div class="flex justify-end pt-4 space-x-3">
-            {% if nucleo %}
-            <a href="{% url 'alunos_nucleo' nucleo.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
+            {% if origem == 'frequencia' and turma_id %}
+                <a href="/turmas/{{ turma_id }}/frequencia/" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
+            {% elif turma_id %}
+                <a href="{% url 'alunos_turma' turma_id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
+            {% elif nucleo %}
+                <a href="{% url 'alunos_nucleo' nucleo.id %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
             {% else %}
-            <a href="{% url 'dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
+                <a href="{% url 'dashboard' %}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg transition">Cancelar</a>
             {% endif %}
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow transition">Salvar AlteraÃ§Ãµes</button>
+            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg shadow transition">Salvar Alterações</button>
         </div>
     </form>
 </div>

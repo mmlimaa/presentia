@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Copiar Alunos{% endblock %}
+{% block content_logado %}
+<div class="mb-6">
+    <a href="{% url 'alunos_turma' turma_destino.id %}" class="text-sm text-blue-600 hover:underline mb-2 inline-block">&larr; Voltar</a>
+    <h3 class="text-2xl font-bold text-gray-800">Copiar Alunos</h3>
+    <p class="text-gray-500 text-sm">Destino: {{ turma_destino.nome }} | Núcleo: {{ turma_destino.nucleo.nome }} | Curso: {{ turma_destino.curso.nome }}</p>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-6">
+    <form method="GET" class="flex flex-col md:flex-row md:items-center gap-4">
+        <label class="font-medium text-gray-700">Selecione a Turma de Origem (Mesmo Núcleo):</label>
+        <select name="origem" class="px-4 py-2 border rounded-lg focus:ring-blue-500 w-full md:w-auto" onchange="this.form.submit()">
+            <option value="">Selecione...</option>
+            {% for t in turmas_origem %}
+            <option value="{{ t.id }}" {% if turma_origem_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nome }} ({{ t.curso.nome }})</option>
+            {% endfor %}
+        </select>
+    </form>
+</div>
+
+{% if turma_origem_id %}
+<form method="POST" action="{% url 'processar_copia_alunos' turma_destino.id %}">
+    {% csrf_token %}
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-600 text-sm border-b border-gray-200">
+                    <th class="py-3 px-4 w-12 text-center">
+                        <input type="checkbox" id="check-all" class="w-4 h-4 text-blue-600 rounded">
+                    </th>
+                    <th class="py-3 px-4 font-semibold">Nome Completo</th>
+                    <th class="py-3 px-4 font-semibold">E-mail</th>
+                    <th class="py-3 px-4 font-semibold">Telefone</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for matricula in alunos_origem %}
+                <tr class="hover:bg-gray-50 transition">
+                    <td class="py-3 px-4 text-center">
+                        <input type="checkbox" name="alunos_selecionados" value="{{ matricula.aluno.id }}" class="check-aluno w-4 h-4 text-blue-600 rounded">
+                    </td>
+                    <td class="py-3 px-4 font-medium text-gray-800 text-sm">{{ matricula.aluno.nome }}</td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">{{ matricula.aluno.email }}</td>
+                    <td class="py-3 px-4 text-gray-600 text-sm">{{ matricula.aluno.telefone }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="py-8 text-center text-gray-500">Nenhum aluno ativo encontrado nesta turma de origem.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-4 flex justify-end">
+        <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg shadow transition">
+            Matricular Selecionados
+        </button>
+    </div>
+</form>
+
+<script>
+    document.getElementById('check-all').addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.check-aluno');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
+{% endif %}
+{% endblock %}

@@ -116,8 +116,28 @@ class Meta:
 def lista_turmas(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
+    
+    from presentia.courses.models import Nucleo
+    
+    # Busca todos os nucleos
+    nucleos = Nucleo.objects.all().order_by('nome')
+    
+    # Se nao houver filtro na URL, pega o primeiro nucleo
+    nucleo_filtro = request.GET.get('nucleo')
+    if not nucleo_filtro and nucleos.exists():
+        nucleo_filtro = str(nucleos.first().id)
+    
+    # Busca as turmas aplicando o filtro
     turmas = Turma.objects.all().select_related('nucleo', 'curso').order_by('-data_inicio')
-    return render(request, 'turmas_lista.html', {'turmas': turmas})
+    if nucleo_filtro:
+        turmas = turmas.filter(nucleo_id=nucleo_filtro)
+        
+    return render(request, 'turmas_lista.html', {
+        'turmas': turmas, 
+        'nucleos': nucleos,
+        'nucleo_filtro': nucleo_filtro
+    })
+
 
 def nova_turma(request):
     if not request.session.get('usuario_id'):

@@ -5,7 +5,7 @@ from django.urls import reverse_lazy
 from django import forms
 from .models import Usuario, SolicitacaoAcesso, Aluno
 from presentia.courses.models import Nucleo, Curso
-from presentia.attendance.models import Matricula, AlunoExperimental
+from presentia.attendance.models import Matricula, AlunoExperimental, Aula, Frequencia
 from django.contrib.auth.hashers import make_password
 
 # --- FORMULÁRIO DE SOLICITAÇÃO DE ACESSO ---
@@ -172,6 +172,9 @@ def editar_aluno(request, aluno_id):
     
     aluno = get_object_or_404(Aluno, id=aluno_id)
     nucleo_id = request.GET.get('nucleo_id') or request.POST.get('nucleo_id')
+    turma_id = request.GET.get('turma_id') or request.POST.get('turma_id')
+    origem = request.GET.get('origem') or request.POST.get('origem')
+    
     nucleo = get_object_or_404(Nucleo, id=nucleo_id) if nucleo_id else None
     
     if request.method == 'POST':
@@ -179,27 +182,30 @@ def editar_aluno(request, aluno_id):
         if form.is_valid():
             form.save()
             messages.success(request, "Dados do aluno atualizados com sucesso!")
-            curso_id = request.GET.get('curso_id') or request.POST.get('curso_id')
-            if nucleo_id and curso_id:
-                return redirect(f"/nucleos/{nucleo_id}/alunos/?curso={curso_id}")
+            
+            # Redirecionamento inteligente baseado na origem
+            if origem == 'frequencia' and turma_id:
+                # Volta para a frequencia
+                data_hoje = __import__('datetime').date.today().strftime('%Y-%m-%d')
+                return redirect(f"/turmas/{turma_id}/frequencia/?data={data_hoje}")
+            elif turma_id:
+                return redirect('alunos_turma', turma_id=turma_id)
             elif nucleo_id:
                 return redirect('alunos_nucleo', nucleo_id=nucleo_id)
             return redirect('dashboard')
     else:
         form = AlunoForm(instance=aluno)
         
-    return render(request, 'aluno_editar.html', {'form': form, 'aluno': aluno, 'nucleo': nucleo})
+    return render(request, 'aluno_editar.html', {
+        'form': form, 
+        'aluno': aluno, 
+        'nucleo': nucleo,
+        'turma_id': turma_id,
+        'origem': origem
+    })
 
-# --- ALUNOS EXPERIMENTAIS ---
-class AlunoExperimentalForm(forms.ModelForm):
-    nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': 'Nome completo'}))
-    celular = forms.CharField(max_length=11, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': '11999999999'}))
 
-    class Meta:
-        model = AlunoExperimental
-        fields = ['nome_completo', 'celular']
-
-    def clean_celular(self):
+def clean_celular(self):
         celular = self.cleaned_data.get('celular')
         if celular:
             celular = ''.join(filter(str.isdigit, celular))
@@ -409,10 +415,8 @@ def alunos_turma(request, turma_id):
     # Pega o filtro da URL (padrao: todos)
     status_filtro = request.GET.get('status', 'todos')
     
-    # Query base
     matriculas = Matricula.objects.filter(turma=turma).select_related('aluno').order_by('aluno__nome')
     
-    # Aplica o filtro
     if status_filtro == 'ativos':
         matriculas = matriculas.filter(ativo=True)
     elif status_filtro == 'desligados':
@@ -487,3 +491,109 @@ def alternar_status_aluno(request, matricula_id):
         
     # Se for GET, exibe a tela de confirmacao
     return render(request, 'confirmar_status_aluno.html', {'matricula': matricula})
+
+
+def frequencia_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    data_str = request.GET.get('data')
+    
+    from datetime import datetime
+    if not data_str:
+        data_str = datetime.today().strftime('%Y-%m-%d')
+        
+    try:
+        data_aula = datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        data_aula = datetime.today().date()
+        data_str = data_aula.strftime('%Y-%m-%d')
+
+    # Busca ou cria a Aula
+    aula, created = Aula.objects.get_or_create(
+        nucleo=turma.nucleo,
+        turma=turma,
+        data=data_aula,
+        defaults={'topico': 'Aula Regular', 'curso': turma.curso}
+    )
+    
+    frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+    
+    if not frequencias.exists():
+        matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True)
+        novas_frequencias = [
+            Frequencia(aula=aula, matricula=mat, status=Frequencia.Status.AUSENTE) 
+            for mat in matriculas_ativas
+        ]
+        Frequencia.objects.bulk_create(novas_frequencias)
+        frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+
+    if request.method == 'POST':
+        for freq in frequencias:
+            novo_status = request.POST.get(f'status_{freq.id}')
+            if novo_status in [Frequencia.Status.PRESENTE, Frequencia.Status.AUSENTE, Frequencia.Status.JUSTIFICADA]:
+                freq.status = novo_status
+                freq.save()
+        messages.success(request, "Chamada salva com sucesso!")
+        return redirect(f"{request.path}?data={data_str}")
+
+    experimentais = AlunoExperimental.objects.filter(
+        nucleo=turma.nucleo, 
+        curso=turma.curso, 
+        data_visita__date=data_aula
+    )
+    
+    return render(request, 'frequencia_turma.html', {
+        'turma': turma,
+        'frequencias': frequencias,
+        'experimentais': experimentais,
+        'data_str': data_str,
+    })
+
+
+# --- COPIA DE ALUNOS ENTRE TURMAS ---
+def copiar_alunos_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma_destino = get_object_or_404(Turma, id=turma_id)
+    turmas_origem = Turma.objects.filter(nucleo=turma_destino.nucleo).exclude(id=turma_destino.id).order_by('-data_inicio')
+    
+    turma_origem_id = request.GET.get('origem')
+    alunos_origem = []
+    
+    if turma_origem_id:
+        alunos_origem = Matricula.objects.filter(turma_id=turma_origem_id, ativo=True).select_related('aluno').order_by('aluno__nome')
+        
+    return render(request, 'copiar_alunos.html', {
+        'turma_destino': turma_destino,
+        'turmas_origem': turmas_origem,
+        'turma_origem_id': turma_origem_id,
+        'alunos_origem': alunos_origem
+    })
+
+def processar_copia_alunos(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+        
+    if request.method == 'POST':
+        turma_destino = get_object_or_404(Turma, id=turma_id)
+        alunos_selecionados = request.POST.getlist('alunos_selecionados')
+        
+        matriculas_criadas = 0
+        for aluno_id in alunos_selecionados:
+            if not Matricula.objects.filter(aluno_id=aluno_id, turma=turma_destino).exists():
+                Matricula.objects.create(
+                    aluno_id=aluno_id,
+                    nucleo=turma_destino.nucleo,
+                    curso=turma_destino.curso,
+                    turma=turma_destino,
+                    ativo=True
+                )
+                matriculas_criadas += 1
+                
+        messages.success(request, f"{matriculas_criadas} alunos copiados com sucesso!")
+        return redirect('alunos_turma', turma_id=turma_destino.id)
+        
+    return redirect('alunos_turma', turma_id=turma_id)
