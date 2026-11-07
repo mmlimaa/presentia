@@ -63,3 +63,4 @@ htmlcov/
 
 # Poetry
 poetry.toml
+config/settings/production.py
