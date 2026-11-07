@@ -1,0 +1,7 @@
+NA VPS :
+
+postgree : 
+presentia_user -> Presentia@2026!
+
+chave secreta no .env : 
+yOas3sSi0NRzL68QeoDHxVXHs0736cQE1zpTXkzLRYdxV6bmJRbuAL5DttvoXwg-1bg

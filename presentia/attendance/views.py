@@ -19,12 +19,21 @@ def dashboard_view(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
     
+    from presentia.accounts.models import Aluno
+    from presentia.courses.models import Nucleo
+    from django.db.models import Count
+    
     total_alunos = Aluno.objects.count()
     total_nucleos = Nucleo.objects.count()
     total_aulas = Aula.objects.count()
     
-    # Pega as 5 ultimas aulas lancadas
-    ultimas_aulas = Aula.objects.select_related('nucleo', 'nucleo__igreja').order_by('-data', '-created_at')[:5]
+    # Busca as 5 ultimas aulas que TEM turma associada E TEM frequencias
+    ultimas_aulas = Aula.objects.filter(
+        turma__isnull=False,
+        frequencias__isnull=False
+    ).annotate(
+        num_freq=Count('frequencias')
+    ).select_related('turma', 'turma__curso', 'nucleo').order_by('-data', '-created_at')[:5]
     
     contexto = {
         'total_alunos': total_alunos,
@@ -35,7 +44,7 @@ def dashboard_view(request):
     
     return render(request, 'dashboard.html', contexto)
 
-# --- VIEWS DE FREQUENCIA E CHAMADA ---
+
 def lista_frequencia(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
@@ -349,4 +358,8 @@ def gerar_pdf_relatorio(contexto):
     doc.build(elements)
     return response
 
+
+
+
+from presentia.courses.models import Turma
 

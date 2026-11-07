@@ -597,3 +597,15 @@ def processar_copia_alunos(request, turma_id):
         return redirect('alunos_turma', turma_id=turma_destino.id)
         
     return redirect('alunos_turma', turma_id=turma_id)
+
+
+def selecionar_turma_chamada(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.courses.models import Turma
+    
+    # Busca todas as turmas
+    turmas = Turma.objects.all().select_related('nucleo', 'curso').order_by('-data_inicio')
+    
+    return render(request, 'selecionar_turma_chamada.html', {'turmas': turmas})

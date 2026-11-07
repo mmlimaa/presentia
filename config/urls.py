@@ -5,7 +5,7 @@ from presentia.accounts.views import (
     gerenciar_solicitacoes, aprovar_solicitacao, recusar_solicitacao,
     gerenciar_usuarios, resetar_senha, alternar_admin, excluir_usuario, editar_usuario,
     alunos_turma, novo_aluno_turma, novo_aluno_experimental_turma, 
-    frequencia_turma, copiar_alunos_turma, processar_copia_alunos,
+    frequencia_turma, copiar_alunos_turma, processar_copia_alunos, selecionar_turma_chamada,
     alternar_status_aluno
 )
 from presentia.churches.views import lista_igrejas, nova_igreja, editar_igreja, excluir_igreja
@@ -40,6 +40,7 @@ urlpatterns = [
     
     # Turmas
     path('turmas/', lista_turmas, name='turmas_lista'),
+    path('chamada/', selecionar_turma_chamada, name='selecionar_turma_chamada'),
     path('turmas/nova/', nova_turma, name='turma_nova'),
     path('turmas/<uuid:turma_id>/editar/', editar_turma, name='editar_turma'),
     path('turmas/<uuid:turma_id>/excluir/', excluir_turma, name='excluir_turma'),

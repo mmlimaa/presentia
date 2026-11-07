@@ -50,7 +50,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
             <h3 class="text-lg font-bold text-gray-800 mb-4">Ações Rápidas</h3>
             <div class="space-y-3">
-                <a href="{% url 'frequencia_lista' %}" class="flex items-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow transition">
+                <a href="{% url 'selecionar_turma_chamada' %}" class="flex items-center w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg shadow transition">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     Lançar Chamada do Dia
                 </a>
@@ -73,7 +73,7 @@
                 <thead>
                     <tr class="text-gray-500 text-xs uppercase tracking-wider">
                         <th class="py-3 px-6 font-semibold">Data</th>
-                        <th class="py-3 px-6 font-semibold">Núcleo</th>
+                        <th class="py-3 px-6 font-semibold">Turma</th>
                         <th class="py-3 px-6 font-semibold">Tópico</th>
                         <th class="py-3 px-6 font-semibold text-right">Ação</th>
                     </tr>
@@ -82,10 +82,10 @@
                     {% for aula in ultimas_aulas %}
                     <tr class="hover:bg-gray-50 transition">
                         <td class="py-3 px-6 font-medium text-gray-800">{{ aula.data|date:"d/m/Y" }}</td>
-                        <td class="py-3 px-6 text-gray-600">{{ aula.nucleo.nome }}</td>
+                        <td class="py-3 px-6 text-gray-600">{{ aula.turma.nome|default:"Sem Turma" }}</td>
                         <td class="py-3 px-6 text-gray-500 text-sm">{{ aula.topico|default:"Aula Regular" }}</td>
                         <td class="py-3 px-6 text-right">
-                            <a href="{% url 'chamada_nucleo' aula.nucleo.id %}?data={{ aula.data|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar Chamada</a>
+                            <a href="{% url 'frequencia_turma' aula.turma.id %}?data={{ aula.data|date:'Y-m-d' }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Editar Chamada</a>
                         </td>
                     </tr>
                     {% empty %}

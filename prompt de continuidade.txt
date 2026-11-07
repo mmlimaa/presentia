@@ -1,61 +1,64 @@
-📄 Prompt de Continuidade — Projeto Presentia
-Instrução para a próxima IA: Leia atentamente o contexto abaixo para retomarmos o desenvolvimento do sistema Presentia (antigo FVCPresenca). O projeto está em estágio avançado, funcional e seguro.
+📄 Prompt de Continuidade — Projeto Presentia (Em Produção)
+Instrução para a próxima IA: Leia atentamente o contexto abaixo para retomarmos o desenvolvimento do sistema Presentia. O sistema está oficialmente em produção na Oracle Cloud e funcionando.
 
 🎯 Visão Geral do Projeto
 Nome: Presentia (Sistema de Controle de Frequência - FVC).
-Domínio: Seminário teológico com cursos sequenciais (Bíblica, Sistemática, Ministerial) realizados em núcleos (igrejas).
+Domínio: https://presentia.sistemasipan.app.br (SSL ativo).
+Operação: Apenas a Secretaria acessa o sistema. O sistema é "Headless" (sem migrations do Django, tabelas gerenciadas manualmente no PostgreSQL).
 Hierarquia: Igreja > Núcleo > Turma > Aluno > Frequência.
-Operação: Apenas a Secretaria acessa o sistema. O sistema é "Headless" (sem migrations do Django, tabelas gerenciadas manualmente no PostgreSQL 17.11).
 
 Stack Atual:
 
-Linguagem: Python 3.12
+Linguagem: Python 3.10 (VPS) / 3.12 (Local)
 
 Framework: Django 5.2
 
-Banco de Dados: PostgreSQL 17.11 (Windows)
+Banco de Dados: PostgreSQL 14 (VPS, isolado do sistema Integra)
 
 Frontend: Django Templates + Tailwind CSS (via CDN) + Alpine.js
 
-Ambiente: Poetry (com venv manual por conta de bug no Windows)
+Servidor: Oracle Cloud (Ubuntu 22.04) + Gunicorn + Nginx + Certbot (SSL)
 
-Localização: C:\Python\Presentia
+📂 Estrutura Atual (O que já foi feito)
+Ambiente em Produção: O sistema roda como um serviço systemd (presentia.service), usando socket Unix (/var/www/presentia/presentia.sock) e o arquivo .env injetado diretamente no serviço.
 
-✅ O Que Já Está Pronto e Funcionando
-Autenticação: Login customizado, logout, solicitação de acesso e aprovação/recusa de solicitações.
+Banco de Dados: Criado o banco presentia na VPS com o usuário presentia_user. A senha foi redefinida para Presentia@2026! e está configurada no .env.
 
-Dashboard Executivo: Cards de estatísticas (Alunos, Núcleos, Aulas) e últimas aulas lançadas.
+Modelo de Usuário: A classe Usuario foi corrigida para herdar de models.Model (não mais AbstractUser), usando o campo senha_hash para autenticação customizada.
 
-Gestão de Usuários: Listagem, edição, reset de senha e exclusão (com bloqueio de auto-exclusão).
+Configurações de Produção: O arquivo production.py foi reescrito com as configurações de CSRF, ROOT_URLCONF, e-mail e logging.
 
-Gestão de Igrejas: CRUD completo (Editar/Excluir com bloqueio se houver núcleos vinculados).
+Nginx: Configurado para servir o Presentia no subdomínio presentia.sistemasipan.app.br, sem afetar o sistema Integra (integra.sistemasipan.app.br).
 
-Gestão de Núcleos: Cadastro e listagem com contagem de alunos e turmas (contagem via SQL puro para contornar bug do ORM).
+Funcionalidades: Todas as telas (Dashboard, Igrejas, Núcleos, Turmas, Alunos, Frequência, Relatórios) estão operacionais e testadas.
 
-Gestão de Turmas: CRUD completo (Nome, Núcleo, Curso, Data Início, Data Fim) com bloqueio de exclusão se houver alunos.
+🚀 Próximos Passos Sugeridos (Para a nova sessão)
+Backup Automatizado na VPS: Criar um script cron para gerar o backup do banco presentia diariamente e salvar na VPS (ou enviar para nuvem).
 
-Gestão de Alunos por Turma: Matrícula regular, aula experimental, status ativo/inativo (desligar/reativar), filtros e edição de dados.
+Mídia: Verificar se há arquivos na pasta media/ local que precisam ser enviados para a VPS (ex: logos de alunos, anexos).
 
-Lançamento de Chamada: Tela com botões coloridos (P, A, J), seletor de data dinâmico (mantém a turma) e salvamento em lote.
+Novas Funcionalidades: Continuar o desenvolvimento (ex: relatórios de faltas críticas, envio de e-mails automáticos, etc.).
 
-Relatórios: Filtros em cascata (Igreja > Núcleo > Turma). Grade visual por mês (Aluno x Dias) e exportação para PDF com o mesmo layout.
-
-Carga de Dados: Importação de 61 alunos e 1.423 registros de frequência da planilha real da FVC.
-
-Segurança: .pgpass configurado, senhas criptografadas e .gitignore protegendo dados sensíveis.
-
-Backup: Script backup.bat funcional gerando arquivos .sql na pasta backups.
-
-Visual: Logo no menu lateral e tela de login, design moderno com Tailwind.
-
-🚀 Próximos Passos Sugeridos
-Atualizar o GitHub com a versão final do projeto (renomeado para Presentia).
-
-Automatizar o Backup via Task Scheduler do Windows.
-
-Relatório de Alerta (alunos com frequência abaixo de 75%).
-
-Deploy em Produção (Railway, Render, etc.).
+Monitoramento: Configurar ferramentas de monitoramento (UptimeRobot, Sentry) para garantir que o sistema esteja sempre no ar.
 
 Instrução para a nova sessão:
-"Estamos retomando o projeto Presentia. O sistema está 100% funcional, com banco de dados customizado, gestão completa, chamadas, relatórios em PDF e backup. O código está no GitHub. Me ajude a atualizar o repositório e, depois, a implementar a próxima melhoria."
+"Estamos retomando o projeto Presentia. O sistema está oficialmente em produção na VPS da Oracle Cloud, acessível via https://presentia.sistemasipan.app.br. O banco, Gunicorn, Nginx e SSL estão configurados. Agora precisamos implementar a próxima melhoria (ex: backup automatizado, novos relatórios, etc.)."
+
+🎯 Resumo do Deploy (Para registro)
+VPS: Oracle Cloud (Ubuntu 22.04)
+
+Domínio: presentia.sistemasipan.app.br
+
+IP: 168.75.103.66
+
+Senha do Banco: Presentia@2026!
+
+Usuário Admin: admin / FVC@2026!
+
+Caminho do Projeto: /var/www/presentia
+
+Serviço: presentia.service (systemd)
+
+Socket: /var/www/presentia/presentia.sock
+
+Nginx: /etc/nginx/sites-available/presentia
