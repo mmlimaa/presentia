@@ -1,16 +1,14 @@
-﻿{% extends "base.html" %}
-{% block title %}SolicitaÃ§Ãµes de Acesso{% endblock %}
+{% extends "base.html" %}
+{% block title %}Solicitações de Acesso{% endblock %}
 {% block content_logado %}
-<div class="mb-6 flex justify-between items-center">
-    <div>
-        <h3 class="text-2xl font-bold text-gray-800">SolicitaÃ§Ãµes de Acesso</h3>
-        <p class="text-gray-500 text-sm">Aprove ou recuse pedidos de novos usuÃ¡rios.</p>
-    </div>
+<div class="mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">Solicitações de Acesso</h3>
+    <p class="text-gray-500 text-sm">Aprove ou recuse pedidos de novos usuários.</p>
 </div>
 
 {% if messages %}
     {% for message in messages %}
-    <div class="alert-message bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">{{ message }}</div>
+    <div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4 alert-message">{{ message }}</div>
     {% endfor %}
 {% endif %}
 
@@ -23,7 +21,7 @@
                 <th class="py-3 px-6 font-semibold">E-mail</th>
                 <th class="py-3 px-6 font-semibold">Telefone</th>
                 <th class="py-3 px-6 font-semibold">Data</th>
-                <th class="py-3 px-6 font-semibold text-right">AÃ§Ãµes</th>
+                <th class="py-3 px-6 font-semibold text-right">Ações</th>
             </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
@@ -34,13 +32,29 @@
                 <td class="py-4 px-6 text-gray-600">{{ sol.email }}</td>
                 <td class="py-4 px-6 text-gray-600">{{ sol.telefone }}</td>
                 <td class="py-4 px-6 text-gray-600">{{ sol.data_solicitacao|date:"d/m/Y H:i" }}</td>
-                <td class="py-4 px-6 text-right space-x-2">
-                    <a href="{% url 'aprovar_solicitacao' sol.id %}" class="text-green-600 hover:text-green-800 font-medium text-sm">Aprovar</a>
-                    <a href="{% url 'recusar_solicitacao' sol.id %}" class="text-red-600 hover:text-red-800 font-medium text-sm">Recusar</a>
+                <td class="py-4 px-6 text-right">
+                    <div class="flex justify-end space-x-3" x-data="{ tooltip: '' }">
+                        
+                        <!-- Ícone Aprovar (Verde) -->
+                        <div class="relative" @mouseenter="tooltip = 'aprovar'" @mouseleave="tooltip = ''">
+                            <a href="{% url 'aprovar_solicitacao' sol.id %}" class="text-green-600 hover:text-green-800 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </a>
+                            <div x-show="tooltip === 'aprovar'" x-cloak class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">Aprovar Acesso</div>
+                        </div>
+                        
+                        <!-- Ícone Recusar (Vermelho) -->
+                        <div class="relative" @mouseenter="tooltip = 'recusar'" @mouseleave="tooltip = ''">
+                            <a href="{% url 'recusar_solicitacao' sol.id %}" class="text-red-600 hover:text-red-800 transition">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </a>
+                            <div x-show="tooltip === 'recusar'" x-cloak class="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">Recusar e Excluir</div>
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% empty %}
-            <tr><td colspan="6" class="py-8 text-center text-gray-500">Nenhuma solicitaÃ§Ã£o pendente.</td></tr>
+            <tr><td colspan="6" class="py-8 text-center text-gray-500">Nenhuma solicitação pendente.</td></tr>
             {% endfor %}
         </tbody>
     </table>
