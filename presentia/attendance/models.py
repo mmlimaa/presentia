@@ -13,6 +13,7 @@ class Matricula(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
     ativo = models.BooleanField(default=True)
+    status_pagamento = models.CharField(max_length=20, default='Em dia')
 
     class Meta:
         db_table = 'tb_matriculas'
@@ -61,3 +62,21 @@ class AlunoExperimental(models.Model):
 
     def __str__(self) -> str:
         return f"{self.nome_completo} - {self.celular}"
+
+
+class Mensalidade(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE, related_name='mensalidades')
+    numero_mes = models.PositiveSmallIntegerField()
+    status = models.CharField(max_length=20)
+    data_status = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tb_mensalidades'
+        constraints = [
+            models.UniqueConstraint(fields=['matricula', 'numero_mes'], name='idx_unique_matricula_mes')
+        ]
+
+    def __str__(self):
+        return f"{self.matricula.aluno.nome} - Mes {self.numero_mes}: {self.status}"

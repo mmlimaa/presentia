@@ -5,8 +5,8 @@ from presentia.accounts.views import (
     gerenciar_solicitacoes, aprovar_solicitacao, recusar_solicitacao,
     gerenciar_usuarios, resetar_senha, alternar_admin, excluir_usuario, editar_usuario,
     alunos_turma, novo_aluno_turma, novo_aluno_experimental_turma, 
-    frequencia_turma, copiar_alunos_turma, processar_copia_alunos, selecionar_turma_chamada,
-    alternar_status_aluno
+    frequencia_turma, copiar_alunos_turma, processar_copia_alunos,
+    alternar_status_aluno, selecionar_turma_chamada
 )
 from presentia.churches.views import lista_igrejas, nova_igreja, editar_igreja, excluir_igreja
 from presentia.courses.views import (
@@ -14,7 +14,8 @@ from presentia.courses.views import (
     editar_turma, excluir_turma, api_contar_turmas
 )
 from presentia.attendance.views import (
-    dashboard_view, chamada_nucleo, lista_frequencia, consulta_frequencia
+    dashboard_view, chamada_nucleo, lista_frequencia, consulta_frequencia,
+    importar_planilha_financeira, api_mensalidades_aluno
 )
 
 urlpatterns = [
@@ -40,7 +41,6 @@ urlpatterns = [
     
     # Turmas
     path('turmas/', lista_turmas, name='turmas_lista'),
-    path('chamada/', selecionar_turma_chamada, name='selecionar_turma_chamada'),
     path('turmas/nova/', nova_turma, name='turma_nova'),
     path('turmas/<uuid:turma_id>/editar/', editar_turma, name='editar_turma'),
     path('turmas/<uuid:turma_id>/excluir/', excluir_turma, name='excluir_turma'),
@@ -50,6 +50,10 @@ urlpatterns = [
     path('turmas/<uuid:turma_id>/frequencia/', frequencia_turma, name='frequencia_turma'),
     path('turmas/<uuid:turma_id>/copiar/', copiar_alunos_turma, name='copiar_alunos_turma'),
     path('turmas/<uuid:turma_id>/copiar/processar/', processar_copia_alunos, name='processar_copia_alunos'),
+    
+    # Chamada
+    path('chamada/', selecionar_turma_chamada, name='selecionar_turma_chamada'),
+    path('nucleos/<uuid:nucleo_id>/chamada/', chamada_nucleo, name='chamada_nucleo'),
     
     # Alunos
     path('alunos/<int:aluno_id>/editar/', editar_aluno, name='editar_aluno'),
@@ -65,8 +69,11 @@ urlpatterns = [
     path('usuarios/<int:usuario_id>/alternar-admin/', alternar_admin, name='alternar_admin'),
     path('usuarios/<int:usuario_id>/excluir/', excluir_usuario, name='excluir_usuario'),
     
-    # Frequencia
+    # Financeiro
+    path('financeiro/importar/', importar_planilha_financeira, name='importar_planilha_financeira'),
+    path('api/mensalidades/<uuid:matricula_id>/', api_mensalidades_aluno, name='api_mensalidades_aluno'),
+    
+    # Frequencia e Relatorios
     path('frequencia/', lista_frequencia, name='frequencia_lista'),
-    path('nucleos/<uuid:nucleo_id>/chamada/', chamada_nucleo, name='chamada_nucleo'),
     path('frequencia/consultas/', consulta_frequencia, name='consulta_frequencia'),
 ]

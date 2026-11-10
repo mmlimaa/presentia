@@ -1,11 +1,14 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from datetime import datetime, date
 import calendar
+import csv
+import io
+import re
 
-from .models import Frequencia, Matricula, AlunoExperimental
-from presentia.courses.models import Nucleo, Aula, Turma, Curso
+from .models import Frequencia, Matricula, AlunoExperimental, Mensalidade
+from presentia.courses.models import Nucleo, Aula, Curso, Turma
 from presentia.churches.models import Igreja
 from presentia.accounts.models import Aluno
 
@@ -19,21 +22,14 @@ def dashboard_view(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
     
-    from presentia.accounts.models import Aluno
-    from presentia.courses.models import Nucleo
-    from django.db.models import Count
-    
     total_alunos = Aluno.objects.count()
     total_nucleos = Nucleo.objects.count()
     total_aulas = Aula.objects.count()
     
-    # Busca as 5 ultimas aulas que TEM turma associada E TEM frequencias
     ultimas_aulas = Aula.objects.filter(
         turma__isnull=False,
         frequencias__isnull=False
-    ).annotate(
-        num_freq=Count('frequencias')
-    ).select_related('turma', 'turma__curso', 'nucleo').order_by('-data', '-created_at')[:5]
+    ).distinct().select_related('turma', 'turma__curso', 'nucleo').order_by('-data', '-created_at')[:5]
     
     contexto = {
         'total_alunos': total_alunos,
@@ -41,19 +37,16 @@ def dashboard_view(request):
         'total_aulas': total_aulas,
         'ultimas_aulas': ultimas_aulas,
     }
-    
     return render(request, 'dashboard.html', contexto)
 
-
+# --- FREQUENCIA ---
 def lista_frequencia(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
     
-    from django.db import connection
     from presentia.churches.models import Igreja
     from presentia.courses.models import Nucleo
     
-    # Filtros
     igreja_id = request.GET.get('igreja')
     nucleo_id = request.GET.get('nucleo')
     
@@ -65,8 +58,8 @@ def lista_frequencia(request):
         
     turmas_dados = []
     
-    # Se um nucleo foi selecionado, busca as turmas
     if nucleo_id:
+        from django.db import connection
         with connection.cursor() as cursor:
             cursor.execute('''
                 SELECT t.id, t.nome, t.data_inicio, t.data_fim, c.nome as curso_nome
@@ -84,7 +77,6 @@ def lista_frequencia(request):
             data_fim = row[3]
             curso_nome = row[4]
             
-            # Conta alunos ativos, inativos e experimentais
             with connection.cursor() as cursor:
                 cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = true", [turma_id])
                 ativos = cursor.fetchone()[0]
@@ -92,7 +84,6 @@ def lista_frequencia(request):
                 cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = false", [turma_id])
                 inativos = cursor.fetchone()[0]
                 
-                # Pega o nucleo_id e curso_id da turma para contar os experimentais
                 cursor.execute("SELECT nucleo_id, curso_id FROM tb_turmas WHERE id = %s::uuid", [turma_id])
                 turma_nucleo_id, turma_curso_id = cursor.fetchone()
                 
@@ -118,7 +109,6 @@ def lista_frequencia(request):
         'nucleo_id': nucleo_id
     })
 
-
 def chamada_nucleo(request, nucleo_id):
     if not request.session.get('usuario_id'):
         return redirect('login')
@@ -138,29 +128,24 @@ def chamada_nucleo(request, nucleo_id):
     
     data_aula = datetime.strptime(data_str, '%Y-%m-%d').date()
 
-    # 1. Busca ou cria a Aula EXATAMENTE pela Turma, Data e Núcleo
     aula, created = Aula.objects.get_or_create(
         nucleo=nucleo,
-        turma=turma,
         data=data_aula,
+        turma=turma,
         defaults={'topico': 'Aula Regular', 'curso': turma.curso}
     )
     
-    # 2. Busca as frequencias existentes
     frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
     
-    # 3. Se nao existirem (primeira vez nesta data), cria apenas para alunos ativos
     if not frequencias.exists():
         matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True)
-        novas_frequencias = []
-        for mat in matriculas_ativas:
-            novas_frequencias.append(
-                Frequencia(aula=aula, matricula=mat, status=Frequencia.Status.AUSENTE)
-            )
+        novas_frequencias = [
+            Frequencia(aula=aula, matricula=mat, status=Frequencia.Status.AUSENTE) 
+            for mat in matriculas_ativas
+        ]
         Frequencia.objects.bulk_create(novas_frequencias)
         frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
 
-    # 4. Salva as alteracoes (POST)
     if request.method == 'POST':
         for freq in frequencias:
             novo_status = request.POST.get(f'status_{freq.id}')
@@ -181,7 +166,7 @@ def chamada_nucleo(request, nucleo_id):
         'data_str': data_str,
     })
 
-
+# --- RELATORIOS ---
 def consulta_frequencia(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
@@ -220,36 +205,33 @@ def consulta_frequencia(request):
             data_inicio = turma.data_inicio
             data_fim = turma.data_fim
 
-            # Busca todas as frequencias no periodo da turma
             frequencias = Frequencia.objects.filter(
                 aula__turma=turma,
                 aula__data__gte=data_inicio,
                 aula__data__lte=data_fim
-            ).select_related('matricula__aluno', 'aula').order_by('aula__data', 'matricula__aluno__nome')
+            ).select_related('matricula__aluno', 'aula')
 
             if aluno_nome:
                 frequencias = frequencias.filter(matricula__aluno__nome__icontains=aluno_nome)
 
-            # Agrupa por mes
             agrupado = {}
             for f in frequencias:
                 mes_ano = f.aula.data.strftime('%Y-%m')
-                dia = f.aula.data.day
                 nome = f.matricula.aluno.nome
+                data_str = f.aula.data.strftime('%Y-%m-%d')
                 
                 if mes_ano not in agrupado:
                     agrupado[mes_ano] = {}
                 if nome not in agrupado[mes_ano]:
                     agrupado[mes_ano][nome] = {}
                 
-                agrupado[mes_ano][nome][dia] = f.status
+                agrupado[mes_ano][nome][data_str] = f.status
 
             meses_pt = {'01': 'JAN', '02': 'FEV', '03': 'MAR', '04': 'ABR', '05': 'MAI', '06': 'JUN',
                         '07': 'JUL', '08': 'AGO', '09': 'SET', '10': 'OUT', '11': 'NOV', '12': 'DEZ'}
 
             blocos = []
             for mes in sorted(agrupado.keys()):
-                # Pega todos os dias que tiveram aula naquele mes
                 aulas_mes = Aula.objects.filter(
                     turma=turma, 
                     data__year=int(mes.split('-')[0]), 
@@ -264,7 +246,8 @@ def consulta_frequencia(request):
                 for nome in sorted(agrupado[mes].keys()):
                     aluno_linha = {'nome': nome, 'dias': []}
                     for dia in dias_do_mes:
-                        status = agrupado[mes][nome].get(dia)
+                        chave_data = f"{mes}-{dia:02d}"
+                        status = agrupado[mes][nome].get(chave_data)
                         
                         if status == 'presente':
                             aluno_linha['dias'].append({'dia': dia, 'status': 'P', 'cor': 'text-green-600'})
@@ -298,7 +281,6 @@ def consulta_frequencia(request):
 
     return render(request, 'consulta_frequencia.html', contexto)
 
-
 def gerar_pdf_relatorio(contexto):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="relatorio_{contexto["turma"].nome}.pdf"'
@@ -320,7 +302,6 @@ def gerar_pdf_relatorio(contexto):
         elements.append(Paragraph(f"Mês/Ano: {bloco['mes_ano']}", ParagraphStyle(name='MesStyle', parent=styles['Heading2'])))
         elements.append(Spacer(1, 10))
         
-        # Cabecalho: Aluno + dias
         header = ["Aluno"] + [str(d) for d in bloco['dias']]
         data = [header]
         
@@ -358,8 +339,143 @@ def gerar_pdf_relatorio(contexto):
     doc.build(elements)
     return response
 
+# --- IMPORTACAO FINANCEIRA ---
+def importar_planilha_financeira(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+    
+    turmas = Turma.objects.all().order_by('-data_inicio')
 
+    if request.method == 'POST':
+        turma_id = request.POST.get('turma')
+        arquivo = request.FILES.get('planilha')
+        
+        if not turma_id or not arquivo:
+            messages.error(request, "Selecione a turma e envie o arquivo CSV.")
+            return redirect('importar_planilha_financeira')
 
+        try:
+            turma = Turma.objects.get(id=turma_id)
+            data = arquivo.read().decode('utf-8-sig')
+            leitor = csv.reader(io.StringIO(data), delimiter=',')
+            linhas = list(leitor)
+            
+            if len(linhas) > 0 and "Nome" in linhas[0][0]:
+                linhas = linhas[1:]
+                
+            importados = 0
+            alunos_cancelados = 0
+            secao_atual = 'ativo'
 
-from presentia.courses.models import Turma
+            for linha in linhas:
+                if not linha or len(linha) < 2: 
+                    continue
+                
+                linha_texto = " ".join(linha).upper()
+                
+                if "CANCELADO" in linha_texto:
+                    if "CLIENTE" in linha_texto:
+                        secao_atual = 'cancelado_cliente'
+                    elif "INADIMPLENTE" in linha_texto:
+                        secao_atual = 'cancelado_inadimplente'
+                    else:
+                        secao_atual = 'cancelado_generico'
+                    continue
 
+                email = ""
+                for celula in linha:
+                    if "@" in celula and "." in celula:
+                        email = celula.strip().lower()
+                        break
+                
+                if not email:
+                    continue
+
+                nome = linha[0].strip().upper() if len(linha) > 0 else "ALUNO SEM NOME"
+                telefone = linha[1].strip().replace(" ", "").replace("-", "") if len(linha) > 1 else ""
+
+                aluno, _ = Aluno.objects.get_or_create(
+                    email=email, 
+                    defaults={'nome': nome, 'telefone': telefone, 'data_inicio': datetime.today().date()}
+                )
+                
+                matricula, _ = Matricula.objects.get_or_create(
+                    aluno=aluno, turma=turma,
+                    defaults={'nucleo': turma.nucleo, 'curso': turma.curso}
+                )
+                
+                Mensalidade.objects.filter(matricula=matricula).delete()
+                status_geral = 'Em dia'
+                
+                if secao_atual.startswith('cancelado'):
+                    matricula.ativo = False
+                    if secao_atual == 'cancelado_inadimplente':
+                        status_geral = 'Inadimplente'
+                    alunos_cancelados += 1
+                else:
+                    matricula.ativo = True
+                    for i in range(4, len(linha)):
+                        valor = linha[i].strip().upper()
+                        if not valor: continue
+                        numero_mes = i - 3
+                        
+                        if 'PAGO' in valor:
+                            status = 'PAGO'
+                        elif 'INADIMPLENTE' in valor:
+                            status = 'INADIMPLENTE'
+                            status_geral = 'Inadimplente'
+                        else:
+                            continue
+                            
+                        data_status = None
+                        match = re.search(r'(\d{2}/\d{2}/\d{4})', valor)
+                        if match:
+                            try:
+                                data_status = datetime.strptime(match.group(1), '%d/%m/%Y').date()
+                            except ValueError:
+                                pass
+                        
+                        Mensalidade.objects.create(
+                            matricula=matricula,
+                            numero_mes=numero_mes,
+                            status=status,
+                            data_status=data_status
+                        )
+                    
+                    if not Mensalidade.objects.filter(matricula=matricula).exists():
+                        status_geral = 'Quitado'
+
+                matricula.status_pagamento = status_geral
+                matricula.save()
+                importados += 1
+
+            messages.success(request, f"{importados} alunos processados ({alunos_cancelados} desativados).")
+            return redirect('alunos_turma', turma_id=turma.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erro ao importar: {e}")
+            return redirect('importar_planilha_financeira')
+
+    return render(request, 'importar_financeiro.html', {'turmas': turmas})
+
+def api_mensalidades_aluno(request, matricula_id):
+    if not request.session.get('usuario_id'):
+        return JsonResponse({'error': 'Nao autorizado'}, status=401)
+        
+    try:
+        mensalidades = Mensalidade.objects.filter(
+            matricula_id=matricula_id, 
+            status='INADIMPLENTE'
+        ).order_by('numero_mes')
+        
+        dados = []
+        for m in mensalidades:
+            dados.append({
+                'mes': m.numero_mes,
+                'status': m.status,
+                'data': m.data_status.strftime('%d/%m/%Y') if m.data_status else 'Sem data'
+            })
+            
+        return JsonResponse({'mensalidades': dados})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

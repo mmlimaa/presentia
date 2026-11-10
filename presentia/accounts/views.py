@@ -412,16 +412,19 @@ def alunos_turma(request, turma_id):
     
     turma = get_object_or_404(Turma, id=turma_id)
     
-    # Pega o filtro da URL (padrao: todos)
+    # Pega o filtro da URL
     status_filtro = request.GET.get('status', 'todos')
     
+    # Busca TODAS as matriculas da turma (sem filtro de ativo aqui)
     matriculas = Matricula.objects.filter(turma=turma).select_related('aluno').order_by('aluno__nome')
     
+    # Aplica o filtro de status
     if status_filtro == 'ativos':
         matriculas = matriculas.filter(ativo=True)
     elif status_filtro == 'desligados':
         matriculas = matriculas.filter(ativo=False)
     
+    # Busca os experimentais
     experimentais = AlunoExperimental.objects.filter(nucleo=turma.nucleo, curso=turma.curso).order_by('-data_visita')
     
     return render(request, 'alunos_turma.html', {
@@ -479,17 +482,23 @@ def alternar_status_aluno(request, matricula_id):
     
     if request.method == 'POST':
         # Inverte o status
-        matricula.ativo = not matricula.ativo
-        matricula.save()
+        novo_status = not matricula.ativo
+        matricula.ativo = novo_status
         
-        status_texto = "ativado" if matricula.ativo else "desligado"
+        # Se estiver sendo REATIVADO, garante que o status de pagamento seja resetado
+        # para que ele volte a integrar a planilha regular (Em dia por padrao)
+        if novo_status == True:
+            matricula.status_pagamento = 'Em dia'
+            
+        matricula.save(update_fields=['ativo', 'status_pagamento'])
+        
+        status_texto = "ativado" if novo_status else "desligado"
         messages.success(request, f"Aluno {matricula.aluno.nome} {status_texto} com sucesso!")
         
         if matricula.turma:
             return redirect('alunos_turma', turma_id=matricula.turma.id)
         return redirect('dashboard')
         
-    # Se for GET, exibe a tela de confirmacao
     return render(request, 'confirmar_status_aluno.html', {'matricula': matricula})
 
 

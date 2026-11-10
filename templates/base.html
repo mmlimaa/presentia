@@ -59,6 +59,10 @@
                     </button>
                     <div x-show="open" class="mt-1 space-y-1 pl-4" style="display: none;">
                         <a href="{% url 'gerenciar_solicitacoes' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'solicitacoes' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">Solicitações de Acesso</a>
+                        
+                        <a href="{% url 'importar_planilha_financeira' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'financeiro' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">
+                            Importar Financeiro
+                        </a>
                         <a href="{% url 'gerenciar_usuarios' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'usuarios' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">Usuários</a>
                     </div>
                 </div>
