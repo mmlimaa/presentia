@@ -3,7 +3,7 @@ from presentia.accounts.views import (
     login_view, logout_view, SolicitacaoAcessoView, 
     alunos_nucleo, novo_aluno_nucleo, novo_aluno_experimental, editar_aluno,
     gerenciar_solicitacoes, aprovar_solicitacao, recusar_solicitacao,
-    gerenciar_usuarios, resetar_senha, alternar_admin, excluir_usuario, editar_usuario,
+    gerenciar_usuarios, novo_usuario, resetar_senha, alternar_admin, excluir_usuario, editar_usuario,
     alunos_turma, novo_aluno_turma, novo_aluno_experimental_turma, 
     frequencia_turma, copiar_alunos_turma, processar_copia_alunos,
     alternar_status_aluno, selecionar_turma_chamada
@@ -65,6 +65,7 @@ urlpatterns = [
     path('solicitacoes/<int:solicitacao_id>/aprovar/', aprovar_solicitacao, name='aprovar_solicitacao'),
     path('solicitacoes/<int:solicitacao_id>/recusar/', recusar_solicitacao, name='recusar_solicitacao'),
     path('usuarios/', gerenciar_usuarios, name='gerenciar_usuarios'),
+    path('usuarios/novo/', novo_usuario, name='novo_usuario'),
     path('usuarios/<int:usuario_id>/editar/', editar_usuario, name='editar_usuario'),
     path('usuarios/<int:usuario_id>/resetar-senha/', resetar_senha, name='resetar_senha'),
     path('usuarios/<int:usuario_id>/alternar-admin/', alternar_admin, name='alternar_admin'),

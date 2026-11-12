@@ -1,9 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Gestão de Usuários{% endblock %}
 {% block content_logado %}
-<div class="mb-6">
-    <h3 class="text-2xl font-bold text-gray-800">Gestão de Usuários</h3>
-    <p class="text-gray-500 text-sm">Gerencie quem tem acesso ao painel administrativo.</p>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+        <h3 class="text-2xl font-bold text-gray-800">Gestão de Usuários</h3>
+        <p class="text-gray-500 text-sm">Gerencie quem tem acesso ao painel administrativo.</p>
+    </div>
+    <a href="{% url 'novo_usuario' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition inline-flex items-center text-sm">
+        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+        Novo Usuário
+    </a>
 </div>
 
 {% if messages %}

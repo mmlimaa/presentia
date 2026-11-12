@@ -644,3 +644,56 @@ def selecionar_turma_chamada(request):
     turmas = Turma.objects.all().select_related('nucleo', 'curso').order_by('-data_inicio')
     
     return render(request, 'selecionar_turma_chamada.html', {'turmas': turmas})
+
+
+# --- NOVO USUARIO ---
+class NovoUsuarioForm(forms.ModelForm):
+    nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    login = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}), min_length=6, max_length=16, required=True, label="Senha (6 a 16 caracteres)")
+    email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    telefone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    is_admin = forms.BooleanField(required=False, label="É Administrador?", widget=forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-blue-600 rounded'}))
+
+    class Meta:
+        model = Usuario
+        fields = ['nome_completo', 'login', 'email', 'telefone']
+
+    def clean_login(self):
+        login = self.cleaned_data.get('login')
+        if login:
+            login = login.lower()
+            if Usuario.objects.filter(login=login).exists():
+                raise forms.ValidationError("Este login já está em uso.")
+        return login
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.lower()
+            if Usuario.objects.filter(email=email).exists():
+                raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        usuario.senha_hash = make_password(self.cleaned_data['senha'])
+        usuario.is_admin = self.cleaned_data.get('is_admin', False)
+        if commit:
+            usuario.save()
+        return usuario
+
+def novo_usuario(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    if request.method == 'POST':
+        form = NovoUsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuário cadastrado com sucesso!")
+            return redirect('gerenciar_usuarios')
+    else:
+        form = NovoUsuarioForm()
+        
+    return render(request, 'novo_usuario.html', {'form': form})
