@@ -13,7 +13,7 @@ from presentia.churches.models import Igreja
 from presentia.accounts.models import Aluno
 
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import landscape, A4
+from reportlab.lib.pagesizes import landscape, A4, portrait
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
@@ -479,3 +479,193 @@ def api_mensalidades_aluno(request, matricula_id):
         return JsonResponse({'mensalidades': dados})
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+# --- RELATORIO DE FREQUENCIA DAS AULAS ---
+def relatorio_frequencia_aulas(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.churches.models import Igreja
+    from presentia.courses.models import Nucleo, Turma
+    from presentia.accounts.models import Aluno
+    from presentia.attendance.models import Matricula, Frequencia, Aula
+    
+    igrejas = Igreja.objects.all().order_by('nome')
+    
+    igreja_id = request.GET.get('igreja')
+    nucleo_id = request.GET.get('nucleo')
+    turma_id = request.GET.get('turma')
+    pagamento_filtro = request.GET.get('pagamento', 'todos')
+    
+    # Se nao houver igreja, apenas mostra os filtros
+    if not igreja_id:
+        return render(request, 'relatorio_frequencia_aulas.html', {'igrejas': igrejas, 'gerado': False})
+        
+    # Busca os nucleos da igreja
+    nucleos = Nucleo.objects.filter(igreja_id=igreja_id).order_by('nome')
+    
+    # Busca as turmas do nucleo ou da igreja
+    turmas = Turma.objects.none()
+    if nucleo_id:
+        turmas = Turma.objects.filter(nucleo_id=nucleo_id).order_by('-data_inicio')
+    else:
+        turmas = Turma.objects.filter(nucleo__igreja_id=igreja_id).order_by('-data_inicio')
+
+    # Define quais turmas serao processadas
+    if turma_id:
+        turmas_processar = Turma.objects.filter(id=turma_id)
+    elif nucleo_id:
+        turmas_processar = Turma.objects.filter(nucleo_id=nucleo_id)
+    else:
+        turmas_processar = Turma.objects.filter(nucleo__igreja_id=igreja_id)
+
+    # Agrupamento
+    dados_agrupados = {}
+    for turma in turmas_processar:
+        igreja_nome = turma.nucleo.igreja.nome
+        nucleo_nome = turma.nucleo.nome
+        
+        if igreja_nome not in dados_agrupados:
+            dados_agrupados[igreja_nome] = {}
+        if nucleo_nome not in dados_agrupados[igreja_nome]:
+            dados_agrupados[igreja_nome][nucleo_nome] = []
+            
+        total_aulas = Aula.objects.filter(turma=turma).count()
+        matriculas = Matricula.objects.filter(turma=turma).select_related('aluno').order_by('aluno__nome')
+        
+        alunos_dados = []
+        total_ativos = 0
+        total_desligados = 0
+        
+        for mat in matriculas:
+            # Filtro de pagamento
+            if pagamento_filtro != 'todos':
+                if pagamento_filtro == 'avista' and mat.status_pagamento != 'Quitado':
+                    continue
+                elif pagamento_filtro == 'adimplente' and mat.status_pagamento != 'Em dia':
+                    continue
+                elif pagamento_filtro == 'inadimplente' and mat.status_pagamento != 'Inadimplente':
+                    continue
+
+            if mat.ativo:
+                total_ativos += 1
+            else:
+                total_desligados += 1
+                
+            percentual = 0
+            if total_aulas > 0 and mat.ativo:
+                presencas = Frequencia.objects.filter(matricula=mat, status=Frequencia.Status.PRESENTE).count()
+                percentual = int((presencas / total_aulas) * 100)
+                
+            status_pgto = mat.status_pagamento
+            if status_pgto == 'Quitado':
+                status_pgto = 'À Vista'
+            elif status_pgto == 'Em dia':
+                status_pgto = 'Adimplente'
+                
+            alunos_dados.append({
+                'nome': mat.aluno.nome,
+                'ativo': mat.ativo,
+                'aproveitamento': percentual,
+                'status_pagamento': status_pgto,
+            })
+        
+        # So adiciona a turma se tiver alunos depois do filtro
+        if alunos_dados:
+            dados_agrupados[igreja_nome][nucleo_nome].append({
+                'nome': turma.nome,
+                'curso': turma.curso.nome,
+                'total_ativos': total_ativos,
+                'total_desligados': total_desligados,
+                'alunos': alunos_dados
+            })
+
+    # Verifica se o usuario clicou em "Exibir" ou "Gerar PDF"
+    exibir_dados = request.GET.get('exibir') == 'true' or request.GET.get('export') == 'pdf'
+    
+    contexto = {
+        'igrejas': igrejas,
+        'nucleos': nucleos,
+        'turmas': turmas,
+        'igreja_id': igreja_id,
+        'nucleo_id': nucleo_id,
+        'turma_id': turma_id,
+        'pagamento_filtro': pagamento_filtro,
+        'dados_agrupados': dados_agrupados if exibir_dados else {},
+        'gerado': exibir_dados
+    }
+
+    if request.GET.get('export') == 'pdf' and contexto.get('gerado'):
+        return gerar_pdf_relatorio_frequencia(contexto)
+
+    return render(request, 'relatorio_frequencia_aulas.html', contexto)
+
+
+def gerar_pdf_relatorio_frequencia(contexto):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="relatorio_frequencia_aulas.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=portrait(A4), rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1)
+    sub_style = ParagraphStyle(name='SubStyle', parent=styles['Normal'], alignment=1)
+    
+    elements.append(Paragraph("Relatório de Frequência das Aulas", title_style))
+    elements.append(Paragraph("Presentia - Controle de Frequência", sub_style))
+    elements.append(Spacer(1, 20))
+
+    for igreja_nome, nucleos in contexto['dados_agrupados'].items():
+        elements.append(Paragraph(f"Igreja: {igreja_nome}", ParagraphStyle(name='IgrejaStyle', parent=styles['Heading2'])))
+        elements.append(Spacer(1, 10))
+        
+        for nucleo_nome, turmas in nucleos.items():
+            elements.append(Paragraph(f"Núcleo: {nucleo_nome}", ParagraphStyle(name='NucleoStyle', parent=styles['Heading3'])))
+            elements.append(Spacer(1, 10))
+            
+            for turma in turmas:
+                elements.append(Paragraph(f"Turma: {turma['nome']} ({turma['curso']}) - Ativos: {turma['total_ativos']} | Desligados: {turma['total_desligados']}", ParagraphStyle(name='TurmaStyle', parent=styles['Normal'])))
+                elements.append(Spacer(1, 5))
+                
+                # Tabela de Alunos
+                header = ["Aluno", "Aproveitamento", "Pagamento", "Status"]
+                data = [header]
+                
+                for aluno in turma['alunos']:
+                    status = "Ativo" if aluno['ativo'] else "Desligado"
+                    data.append([aluno['nome'], f"{aluno['aproveitamento']}%", aluno['status_pagamento'], status])
+                    
+                table = Table(data, colWidths=[250, 80, 80, 60])
+                style = TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ])
+                
+                # Colorir aproveitamento
+                for r_idx, aluno in enumerate(turma['alunos'], start=1):
+                    if aluno['aproveitamento'] >= 75:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.green)
+                    elif aluno['aproveitamento'] >= 50:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.orange)
+                    else:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.red)
+                        
+                    # Colorir status
+                    if aluno['status_pagamento'] == 'Inadimplente':
+                        style.add('TEXTCOLOR', (2, r_idx), (2, r_idx), colors.red)
+                        
+                table.setStyle(style)
+                elements.append(table)
+                elements.append(Spacer(1, 20))
+    
+    doc.build(elements)
+    return response

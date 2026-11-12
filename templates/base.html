@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Presentia</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         [x-cloak] { display: none !important; }
@@ -48,6 +51,9 @@
                     </button>
                     <div x-show="open" class="mt-1 space-y-1 pl-4" style="display: none;">
                         <a href="{% url 'consulta_frequencia' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'consulta' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">Lista de Presença</a>
+                        <a href="{% url 'relatorio_frequencia_aulas' %}" class="block px-4 py-2 text-sm rounded-lg {% if 'relatorio-aulas' in request.path %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:text-white hover:bg-slate-800{% endif %} transition">
+                            Frequência das Aulas
+                        </a>
                     </div>
                 </div>
 

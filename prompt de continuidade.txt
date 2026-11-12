@@ -1,18 +1,16 @@
 📄 Prompt de Continuidade — Projeto Presentia (Em Produção)
-Instrução para a próxima IA: Leia atentamente o contexto abaixo para retomarmos o desenvolvimento. O sistema está 100% funcional, seguro e em produção na Oracle Cloud.
+Instrução para a próxima IA: Leia atentamente o contexto abaixo para retomarmos o desenvolvimento. O sistema está 100% funcional, seguro e em produção na Oracle Cloud, incluindo a nova gestão financeira.
 
 🎯 Visão Geral do Projeto
 Nome: Presentia (antigo FVCPresenca).
 Domínio de Produção: https://presentia.sistemasipan.app.br
 Operação: Apenas a Secretaria acessa o sistema. O sistema é "Headless" (sem migrations do Django, tabelas gerenciadas manualmente no PostgreSQL).
-Hierarquia: Igreja > Núcleo > Turma > Aluno > Frequência.
+Hierarquia: Igreja > Núcleo > Turma > Aluno > Frequência + Financeiro.
 
 🏗️ Stack e Ambiente de Produção (VPS)
-Servidor: Oracle Cloud (Ubuntu 22.04.5 LTS).
+Servidor: Oracle Cloud (Ubuntu 22.04.5 LTS). IP: 168.75.103.66.
 
-IP Público: 168.75.103.66.
-
-Aplicação: Python 3.10, Django 5.2, Gunicorn (rodando como serviço systemd).
+Aplicação: Python 3.10, Django 5.2, Gunicorn (rodando como serviço systemd presentia.service).
 
 Banco de Dados: PostgreSQL 14 (Instalado nativamente, isolado do sistema Integra).
 
@@ -22,7 +20,7 @@ SSL: Certbot/Let's Encrypt (renovação automática ativa).
 
 Pasta do Projeto na VPS: /var/www/presentia.
 
-Arquivos Sensíveis: O arquivo production.py não está no GitHub (está no .gitignore). Ele foi criado manualmente na VPS e contém as configurações de segurança, CSRF, e-mail e sessão.
+Arquivos Sensíveis: O arquivo production.py não está no GitHub (está no .gitignore). Ele foi criado manualmente na VPS e contém as configurações de segurança, CSRF, e-mail e sessão (usando cache LocMem para evitar queda de login com múltiplos workers).
 
 🔐 Credenciais e Acessos
 Usuário Admin (Sistema): admin / Senha: FVC@2026!
@@ -34,30 +32,36 @@ Nome do Banco: presentia
 ✅ O Que Já Está Pronto (Funcionalidades)
 Autenticação: Login customizado, logout, solicitação de acesso e aprovação/recusa.
 
-Dashboard Executivo: Cards de estatísticas (Alunos, Núcleos, Aulas) e lista das 5 últimas chamadas (agora exibindo o nome da Turma e filtrando apenas aulas com frequência).
+Dashboard Executivo: Cards de estatísticas e lista das últimas chamadas (exibindo a Turma e filtrando apenas aulas com frequência).
 
-Gestão de Usuários: CRUD, reset de senha, alternar permissão de Admin, com ícones e tooltips no padrão visual.
+Gestão de Usuários e Solicitações: CRUD, reset de senha, alternar Admin, com ícones e tooltips.
 
-Gestão de Igrejas: CRUD completo com bloqueio de exclusão se houver núcleos.
+Gestão de Igrejas e Núcleos: CRUD e contagem de alunos/turmas.
 
-Gestão de Núcleos: Cadastro e listagem com filtro de Igreja e contagem (via SQL puro) de alunos e turmas.
+Gestão de Turmas: CRUD completo, cópia de alunos entre turmas e botão de Frequência.
 
-Gestão de Turmas: CRUD completo (Nome, Núcleo, Curso, Data Início, Data Fim). Inclui a funcionalidade de Copiar Alunos de turmas anteriores (mesmo Núcleo) e o botão de Frequência.
+Gestão de Alunos por Turma: Matrícula, status ativo/inativo, filtros, edição. Nova regra: Alunos desligados têm a coluna de Pagamento em branco. Ao reativar, o status volta para "Em dia".
 
-Gestão de Alunos por Turma: Matrícula regular, experimental, status ativo/inativo, filtros e edição.
+Lançamento de Chamada: Botões coloridos (P, A, J), seletor de data dinâmico e alerta de saída sem salvar.
 
-Lançamento de Chamada: Tela com botões coloridos (P, A, J), seletor de data dinâmico (mantém a turma) e salvamento em lote. Alerta customizado se o usuário tentar sair sem salvar.
+Relatórios: Grade visual por mês (Aluno x Dias) e exportação para PDF.
 
-Relatórios: Filtros em cascata (Igreja > Núcleo > Turma). Grade visual por mês (Aluno x Dias) e exportação para PDF com o mesmo layout.
+Gestão Financeira (Novo):
 
-Interface: Totalmente responsiva (mobile-friendly), com logo customizada e ícones SVG padronizados.
+Upload de planilha CSV na tela de Administração.
+
+Parser inteligente que lê o CSV, detecta seções de "Cancelado pelo cliente" ou "Cancelado por inadimplência" e desativa os alunos.
+
+Criação da tabela tb_mensalidades (meses como linhas) e cálculo automático de status ("Quitado", "Em dia", "Inadimplente").
+
+Modal (via Alpine.js + API) para exibir os meses em falta do aluno inadimplente.
 
 ⚠️ Lições Aprendidas do Deploy (Evitar Retrabalho)
 wsgi.py: Deve sempre apontar para config.settings.production no GitHub.
 
-production.py: Nunca deve ir para o GitHub. Se o git reset --hard for rodado, ele não apagará o production.py local da VPS, desde que o arquivo não esteja no rastreamento do Git.
+production.py: Nunca deve ir para o GitHub. O git reset --hard não o apagará se ele estiver no .gitignore.
 
-Sessões: Para evitar que o login caia no meio da navegação com múltiplos workers do Gunicorn, configuramos SESSION_ENGINE = "django.contrib.sessions.backends.cache" com LocMemCache no production.py.
+Banco de Dados (VPS): Sempre que uma nova coluna for criada localmente (ex: status_pagamento), ela precisa ser criada manualmente na VPS via psql ou pgAdmin.
 
 Comandos de Deploy:
 
@@ -66,8 +70,12 @@ No PC: git add . && git commit -m "..." && git push origin main
 Na VPS: cd /var/www/presentia && git fetch origin && git reset --hard origin/main && sudo systemctl restart presentia
 
 🚀 Próximos Passos Sugeridos (Para a nova sessão)
-Backup Automatizado na VPS: Configurar um cron job para rodar o pg_dump diariamente e salvar na VPS (ou enviar para nuvem).
+Backup Automatizado na VPS: Configurar um cron job para rodar o pg_dump diariamente.
 
-Migração de Mídia: Verificar se há arquivos na pasta media/ (ex: anexos) do seu computador local que precisam ser enviados para a VPS.
+Melhorias no Financeiro: Relatório de inadimplência geral (por turma ou núcleo).
 
-Novas Funcionalidades: Relatórios de faltas críticas (alunos abaixo de 75%), envio de e-mails automáticos, etc.
+Envio de E-mails: Disparar e-mails automáticos para alunos inadimplentes.
+
+Instrução para a nova sessão:
+"Estamos retomando o projeto Presentia. O sistema está 100% em produção na VPS, com gestão acadêmica e financeira integradas. O código está no GitHub e o deploy está seguro. Por favor, me ajude a implementar a próxima melhoria (ex: backup automatizado, melhorias no financeiro, etc.)."
+

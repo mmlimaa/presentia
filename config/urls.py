@@ -15,7 +15,8 @@ from presentia.courses.views import (
 )
 from presentia.attendance.views import (
     dashboard_view, chamada_nucleo, lista_frequencia, consulta_frequencia,
-    importar_planilha_financeira, api_mensalidades_aluno
+    importar_planilha_financeira, api_mensalidades_aluno,
+    relatorio_frequencia_aulas
 )
 
 urlpatterns = [
@@ -76,4 +77,5 @@ urlpatterns = [
     # Frequencia e Relatorios
     path('frequencia/', lista_frequencia, name='frequencia_lista'),
     path('frequencia/consultas/', consulta_frequencia, name='consulta_frequencia'),
+    path('frequencia/relatorio-aulas/', relatorio_frequencia_aulas, name='relatorio_frequencia_aulas'),
 ]

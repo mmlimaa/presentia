@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Relatório de Frequência das Aulas{% endblock %}
+{% block content_logado %}
+<div class="mb-6">
+    <h3 class="text-2xl font-bold text-gray-800">Relatório de Frequência das Aulas</h3>
+    <p class="text-gray-500 text-sm">Aproveitamento e situação financeira agrupados por Igreja, Núcleo e Turma.</p>
+</div>
+
+<div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 mb-8">
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Igreja (Obrigatório)</label>
+            <select name="igreja" required class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500" onchange="this.form.submit()">
+                <option value="">Selecione...</option>
+                {% for ig in igrejas %}
+                <option value="{{ ig.id }}" {% if igreja_id == ig.id|stringformat:"s" %}selected{% endif %}>{{ ig.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Núcleo</label>
+            <select name="nucleo" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500" onchange="this.form.submit()">
+                <option value="">Todos</option>
+                {% for n in nucleos %}
+                <option value="{{ n.id }}" {% if nucleo_id == n.id|stringformat:"s" %}selected{% endif %}>{{ n.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Turma</label>
+            <select name="turma" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500">
+                <option value="">Todas</option>
+                {% for t in turmas %}
+                <option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Pagamento</label>
+            <select name="pagamento" class="w-full px-3 py-2 border rounded-lg focus:ring-blue-500">
+                <option value="todos" {% if pagamento_filtro == 'todos' %}selected{% endif %}>Todos</option>
+                <option value="avista" {% if pagamento_filtro == 'avista' %}selected{% endif %}>À Vista</option>
+                <option value="adimplente" {% if pagamento_filtro == 'adimplente' %}selected{% endif %}>Adimplentes</option>
+                <option value="inadimplente" {% if pagamento_filtro == 'inadimplente' %}selected{% endif %}>Inadimplentes</option>
+            </select>
+        </div>
+        <div class="flex space-x-2">
+            <button type="submit" name="exibir" value="true" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition h-10">Exibir</button>
+            {% if gerado %}
+            <a href="?{% for key, value in request.GET.items %}{% if key != 'export' %}{{ key }}={{ value }}&{% endif %}{% endfor %}export=pdf" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg shadow transition h-10 flex items-center">Gerar PDF</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+{% if gerado %}
+    {% if dados_agrupados %}
+        {% for igreja_nome, nucleos in dados_agrupados.items %}
+        <div class="mb-8">
+            <h4 class="text-lg font-bold text-slate-800 mb-3 border-b pb-2">Igreja: {{ igreja_nome }}</h4>
+            
+            {% for nucleo_nome, turmas in nucleos.items %}
+            <div class="mb-6 pl-4">
+                <h5 class="text-md font-semibold text-slate-700 mb-2">Núcleo: {{ nucleo_nome }}</h5>
+                
+                {% for turma in turmas %}
+                <div class="mb-6 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                    <div class="bg-gray-50 p-4 border-b border-gray-200 flex justify-between items-center">
+                        <span class="font-bold text-gray-800">Turma: {{ turma.nome }} ({{ turma.curso }})</span>
+                        <div class="space-x-4 text-sm">
+                            <span class="text-green-600 font-medium">Ativos: {{ turma.total_ativos }}</span>
+                            <span class="text-red-600 font-medium">Desligados: {{ turma.total_desligados }}</span>
+                        </div>
+                    </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-600 text-xs uppercase tracking-wider">
+                                <th class="py-2 px-4 font-semibold">Nome Completo</th>
+                                <th class="py-2 px-4 font-semibold text-center w-32">Aproveitamento</th>
+                                <th class="py-2 px-4 font-semibold text-center w-40">Pagamento</th>
+                                <th class="py-2 px-4 font-semibold text-center w-24">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for aluno in turma.alunos %}
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="py-2 px-4 text-sm text-gray-800">{{ aluno.nome }}</td>
+                                <td class="py-2 px-4 text-center font-bold text-sm 
+                                    {% if aluno.aproveitamento >= 75 %}text-green-600
+                                    {% elif aluno.aproveitamento >= 50 %}text-yellow-600
+                                    {% else %}text-red-600{% endif %}">
+                                    {{ aluno.aproveitamento }}%
+                                </td>
+                                <td class="py-2 px-4 text-center text-sm 
+                                    {% if aluno.status_pagamento == 'Inadimplente' %}text-red-600 font-bold
+                                    {% elif aluno.status_pagamento == 'À Vista' %}text-blue-600
+                                    {% else %}text-green-600{% endif %}">
+                                    {{ aluno.status_pagamento }}
+                                </td>
+                                <td class="py-2 px-4 text-center">
+                                    {% if aluno.ativo %}
+                                    <span class="text-green-600 text-xs font-bold">Ativo</span>
+                                    {% else %}
+                                    <span class="text-gray-400 text-xs font-bold">Desligado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="bg-yellow-50 border border-yellow-200 text-yellow-800 p-6 rounded-xl text-center">
+            Nenhum dado encontrado para os filtros selecionados.
+        </div>
+    {% endif %}
+{% endif %}
+{% endblock %}

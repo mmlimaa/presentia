@@ -519,49 +519,75 @@ def frequencia_turma(request, turma_id):
         data_aula = datetime.today().date()
         data_str = data_aula.strftime('%Y-%m-%d')
 
-    # Busca ou cria a Aula
-    aula, created = Aula.objects.get_or_create(
-        nucleo=turma.nucleo,
-        turma=turma,
-        data=data_aula,
-        defaults={'topico': 'Aula Regular', 'curso': turma.curso}
-    )
+    from presentia.attendance.models import Aula as AulaModel, Frequencia as FreqModel
     
-    frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+    # 1. Busca ou cria a Aula
+    aula = AulaModel.objects.filter(nucleo=turma.nucleo, turma=turma, data=data_aula).first()
+    if not aula:
+        aula = AulaModel.objects.create(nucleo=turma.nucleo, turma=turma, data=data_aula, topico='Aula Regular', curso=turma.curso)
     
+    # 2. Busca as frequencias existentes
+    frequencias = FreqModel.objects.filter(aula=aula).select_related('matricula__aluno').order_by('matricula__aluno__nome')
+    
+    # 3. Se nao existirem, cria para os alunos ativos
     if not frequencias.exists():
-        matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True)
+        matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True).order_by('aluno__nome')
         novas_frequencias = [
-            Frequencia(aula=aula, matricula=mat, status=Frequencia.Status.AUSENTE) 
+            FreqModel(aula=aula, matricula=mat, status=FreqModel.Status.AUSENTE) 
             for mat in matriculas_ativas
         ]
-        Frequencia.objects.bulk_create(novas_frequencias)
-        frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+        FreqModel.objects.bulk_create(novas_frequencias)
+        frequencias = FreqModel.objects.filter(aula=aula).select_related('matricula__aluno').order_by('matricula__aluno__nome')
 
+    # 4. Processa o POST
     if request.method == 'POST':
         for freq in frequencias:
             novo_status = request.POST.get(f'status_{freq.id}')
-            if novo_status in [Frequencia.Status.PRESENTE, Frequencia.Status.AUSENTE, Frequencia.Status.JUSTIFICADA]:
+            if novo_status in [FreqModel.Status.PRESENTE, FreqModel.Status.AUSENTE, FreqModel.Status.JUSTIFICADA]:
                 freq.status = novo_status
                 freq.save()
         messages.success(request, "Chamada salva com sucesso!")
         return redirect(f"{request.path}?data={data_str}")
 
-    experimentais = AlunoExperimental.objects.filter(
-        nucleo=turma.nucleo, 
-        curso=turma.curso, 
-        data_visita__date=data_aula
-    )
+    # 5. Calcula % Frequencia (Presencas / Total de Aulas Lancadas)
+    total_aulas_turma = AulaModel.objects.filter(turma=turma).count()
+    
+    for freq in frequencias:
+        if total_aulas_turma > 0:
+            presencas_aluno = FreqModel.objects.filter(
+                matricula=freq.matricula, 
+                status=FreqModel.Status.PRESENTE
+            ).count()
+            freq.percentual_frequencia = int((presencas_aluno / total_aulas_turma) * 100)
+        else:
+            freq.percentual_frequencia = 0
+
+    # 6. Contadores
+    total_alunos = frequencias.count()
+    total_presentes = frequencias.filter(status=FreqModel.Status.PRESENTE).count()
+    total_ausentes = frequencias.filter(status=FreqModel.Status.AUSENTE).count()
+    total_justificadas = frequencias.filter(status=FreqModel.Status.JUSTIFICADA).count()
+
+    # 7. Busca alunos experimentais
+    experimentais = AlunoExperimental.objects.filter(nucleo=turma.nucleo, curso=turma.curso, data_visita__date=data_aula).order_by('nome_completo')
+    
+    # 8. Datas com frequencia para o calendario
+    datas_com_frequencia = AulaModel.objects.filter(turma=turma).values_list('data', flat=True)
+    datas_iso = [d.strftime('%Y-%m-%d') for d in datas_com_frequencia]
     
     return render(request, 'frequencia_turma.html', {
         'turma': turma,
         'frequencias': frequencias,
         'experimentais': experimentais,
         'data_str': data_str,
+        'datas_com_frequencia': datas_iso,
+        'total_alunos': total_alunos,
+        'total_presentes': total_presentes,
+        'total_ausentes': total_ausentes,
+        'total_justificadas': total_justificadas,
     })
 
 
-# --- COPIA DE ALUNOS ENTRE TURMAS ---
 def copiar_alunos_turma(request, turma_id):
     if not request.session.get('usuario_id'):
         return redirect('login')
