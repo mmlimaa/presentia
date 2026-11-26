@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
@@ -8,7 +8,7 @@ from presentia.courses.models import Nucleo, Curso
 from presentia.attendance.models import Matricula, AlunoExperimental, Aula, Frequencia
 from django.contrib.auth.hashers import make_password
 
-# --- FORMULÁRIO DE SOLICITAÇÃO DE ACESSO ---
+# --- FORMULÃƒÆ’Ã‚ÂRIO DE SOLICITAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O DE ACESSO ---
 class SolicitacaoAcessoForm(forms.ModelForm):
     nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'NOME COMPLETO'}))
     login = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'login'}))
@@ -29,7 +29,7 @@ class SolicitacaoAcessoForm(forms.ModelForm):
         if login:
             login = login.lower()
             if Usuario.objects.filter(login=login).exists() or SolicitacaoAcesso.objects.filter(login=login).exists():
-                raise forms.ValidationError("Este login já está em uso ou em análise.")
+                raise forms.ValidationError("Este login jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ em uso ou em anÃƒÆ’Ã‚Â¡lise.")
         return login
 
     def clean_email(self):
@@ -37,7 +37,7 @@ class SolicitacaoAcessoForm(forms.ModelForm):
         if email:
             email = email.lower()
             if Usuario.objects.filter(email=email).exists() or SolicitacaoAcesso.objects.filter(email=email).exists():
-                raise forms.ValidationError("Este e-mail já está cadastrado ou em análise.")
+                raise forms.ValidationError("Este e-mail jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ cadastrado ou em anÃƒÆ’Ã‚Â¡lise.")
         return email
 
     def save(self, commit=True):
@@ -47,7 +47,7 @@ class SolicitacaoAcessoForm(forms.ModelForm):
             solicitacao.save()
         return solicitacao
 
-# --- VIEWS DE AUTENTICAÇÃO ---
+# --- VIEWS DE AUTENTICAÃƒÆ’Ã¢â‚¬Â¡ÃƒÆ’Ã†â€™O ---
 def login_view(request):
     if request.session.get('usuario_id'):
         return redirect('dashboard')
@@ -70,7 +70,7 @@ def login_view(request):
             else:
                 messages.error(request, "Senha incorreta.")
         except Usuario.DoesNotExist:
-            messages.error(request, "Usuário não encontrado.")
+            messages.error(request, "UsuÃƒÆ’Ã‚Â¡rio nÃƒÆ’Ã‚Â£o encontrado.")
             
     return render(request, 'login.html')
 
@@ -84,10 +84,10 @@ class SolicitacaoAcessoView(CreateView):
     success_url = reverse_lazy('login')
 
     def form_valid(self, form):
-        messages.success(self.request, "Solicitação enviada com sucesso! Aguarde a aprovação.")
+        messages.success(self.request, "SolicitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o enviada com sucesso! Aguarde a aprovaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.")
         return super().form_valid(form)
 
-# --- FORMULÁRIO E VIEWS DE ALUNO ---
+# --- FORMULÃƒÆ’Ã‚ÂRIO E VIEWS DE ALUNO ---
 class AlunoForm(forms.ModelForm):
     nome = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': 'Nome completo'}))
     telefone = forms.CharField(max_length=11, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': '11999999999'}))
@@ -97,7 +97,7 @@ class AlunoForm(forms.ModelForm):
             format='%Y-%m-%d', 
             attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'type': 'date'}
         ), 
-        label="Data de Matrícula"
+        label="Data de MatrÃƒÆ’Ã‚Â­cula"
     )
 
     class Meta:
@@ -109,7 +109,7 @@ class AlunoForm(forms.ModelForm):
         if tel:
             tel = ''.join(filter(str.isdigit, tel))
             if len(tel) != 11:
-                raise forms.ValidationError("O telefone deve ter 11 dígitos (DDD + número).")
+                raise forms.ValidationError("O telefone deve ter 11 dÃƒÆ’Ã‚Â­gitos (DDD + nÃƒÆ’Ã‚Âºmero).")
         return tel
 
 def alunos_nucleo(request, nucleo_id):
@@ -151,7 +151,7 @@ def novo_aluno_nucleo(request, nucleo_id):
     curso = get_object_or_404(Curso, id=curso_id) if curso_id else None
     
     if not curso:
-        messages.error(request, "Por favor, selecione um período antes de matricular.")
+        messages.error(request, "Por favor, selecione um perÃƒÆ’Ã‚Â­odo antes de matricular.")
         return redirect('alunos_nucleo', nucleo_id=nucleo.id)
     
     if request.method == 'POST':
@@ -159,7 +159,7 @@ def novo_aluno_nucleo(request, nucleo_id):
         if form.is_valid():
             aluno = form.save()
             Matricula.objects.create(aluno=aluno, nucleo=nucleo, curso=curso)
-            messages.success(request, f"Aluno matriculado com sucesso no período {curso.nome}!")
+            messages.success(request, f"Aluno matriculado com sucesso no perÃƒÆ’Ã‚Â­odo {curso.nome}!")
             return redirect(f"/nucleos/{nucleo.id}/alunos/?curso={curso.id}")
     else:
         form = AlunoForm()
@@ -205,16 +205,43 @@ def editar_aluno(request, aluno_id):
     })
 
 
-def clean_celular(self):
+
+
+class AlunoExperimentalForm(forms.ModelForm):
+    nome_completo = forms.CharField(
+        max_length=150, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg uppercase', 'placeholder': 'Nome completo'})
+    )
+    celular = forms.CharField(
+        max_length=11, 
+        required=True, 
+        widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': '11999999999', 'maxlength': '11'})
+    )
+
+    class Meta:
+        model = AlunoExperimental
+        fields = ['nome_completo', 'celular']
+
+    def clean_nome_completo(self):
+        nome = self.cleaned_data.get('nome_completo')
+        if nome:
+            return nome.upper()
+        return nome
+
+    def clean_celular(self):
         celular = self.cleaned_data.get('celular')
         if celular:
             celular = ''.join(filter(str.isdigit, celular))
             if len(celular) != 11:
-                raise forms.ValidationError("O celular deve ter 11 dígitos (DDD + número).")
+                raise forms.ValidationError("O celular deve ter exatamente 11 dígitos (DDD + número).")
             if AlunoExperimental.objects.filter(celular=celular).exists():
                 raise forms.ValidationError("Este celular já foi utilizado em uma aula experimental anteriormente. O aluno deve ser matriculado como regular.")
         return celular
 
+    
+
+# --- VIEWS DE ALUNO EXPERIMENTAL ---
 def novo_aluno_experimental(request, nucleo_id):
     if not request.session.get('usuario_id'):
         return redirect('login')
@@ -224,7 +251,7 @@ def novo_aluno_experimental(request, nucleo_id):
     curso = get_object_or_404(Curso, id=curso_id) if curso_id else None
     
     if not curso:
-        messages.error(request, "Por favor, selecione um período antes de cadastrar um aluno experimental.")
+        messages.error(request, "Por favor, selecione um perÃƒÆ’Ã‚Â­odo antes de cadastrar um aluno experimental.")
         return redirect('alunos_nucleo', nucleo_id=nucleo.id)
 
     if request.method == 'POST':
@@ -234,7 +261,7 @@ def novo_aluno_experimental(request, nucleo_id):
             aluno.nucleo = nucleo
             aluno.curso = curso
             aluno.save()
-            messages.success(request, f"Aula experimental registrada com sucesso no período {curso.nome}!")
+            messages.success(request, f"Aula experimental registrada com sucesso no perÃƒÆ’Ã‚Â­odo {curso.nome}!")
             return redirect(f"/nucleos/{nucleo.id}/alunos/?curso={curso.id}")
     else:
         form = AlunoExperimentalForm()
@@ -249,7 +276,7 @@ def gerenciar_solicitacoes(request):
     
     # Apenas admin pode acessar
     if not request.session.get('usuario_is_admin'):
-        messages.error(request, "Acesso negado. Apenas administradores podem gerenciar solicitações.")
+        messages.error(request, "Acesso negado. Apenas administradores podem gerenciar solicitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes.")
         return redirect('dashboard')
         
     solicitacoes = SolicitacaoAcesso.objects.all().order_by('-data_solicitacao')
@@ -276,7 +303,7 @@ def aprovar_solicitacao(request, solicitacao_id):
         # Apaga a solicitacao para nao acumular lixo
         solicitacao.delete()
         
-        messages.success(request, f"Usuário {novo_usuario.nome_completo} aprovado com sucesso!")
+        messages.success(request, f"UsuÃƒÆ’Ã‚Â¡rio {novo_usuario.nome_completo} aprovado com sucesso!")
         return redirect('gerenciar_solicitacoes')
         
     return render(request, 'confirmar_aprovacao.html', {'solicitacao': solicitacao})
@@ -290,7 +317,7 @@ def recusar_solicitacao(request, solicitacao_id):
     if request.method == 'POST':
         nome = solicitacao.nome_completo
         solicitacao.delete()
-        messages.warning(request, f"Solicitação de {nome} recusada e removida.")
+        messages.warning(request, f"SolicitaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de {nome} recusada e removida.")
         return redirect('gerenciar_solicitacoes')
         
     return render(request, 'confirmar_recusa.html', {'solicitacao': solicitacao})
@@ -317,7 +344,7 @@ def resetar_senha(request, usuario_id):
         else:
             usuario.set_senha(nova_senha)
             usuario.save()
-            messages.success(request, f"Senha do usuário {usuario.nome_completo} redefinida com sucesso!")
+            messages.success(request, f"Senha do usuÃƒÆ’Ã‚Â¡rio {usuario.nome_completo} redefinida com sucesso!")
             return redirect('gerenciar_usuarios')
             
     return render(request, 'resetar_senha.html', {'usuario': usuario})
@@ -330,14 +357,14 @@ def alternar_admin(request, usuario_id):
     
     # Nao permite que o admin logado remova seu proprio privilegio
     if usuario.id == request.session.get('usuario_id'):
-        messages.error(request, "Você não pode remover seu próprio status de administrador.")
+        messages.error(request, "VocÃƒÆ’Ã‚Âª nÃƒÆ’Ã‚Â£o pode remover seu prÃƒÆ’Ã‚Â³prio status de administrador.")
         return redirect('gerenciar_usuarios')
         
     usuario.is_admin = not usuario.is_admin
     usuario.save()
     
     status = "promovido a" if usuario.is_admin else "rebaixado de"
-    messages.success(request, f"Usuário {usuario.nome_completo} {status} Administrador.")
+    messages.success(request, f"UsuÃƒÆ’Ã‚Â¡rio {usuario.nome_completo} {status} Administrador.")
     return redirect('gerenciar_usuarios')
 
 def excluir_usuario(request, usuario_id):
@@ -347,13 +374,13 @@ def excluir_usuario(request, usuario_id):
     usuario = get_object_or_404(Usuario, id=usuario_id)
     
     if usuario.id == request.session.get('usuario_id'):
-        messages.error(request, "Você não pode excluir sua própria conta.")
+        messages.error(request, "VocÃƒÆ’Ã‚Âª nÃƒÆ’Ã‚Â£o pode excluir sua prÃƒÆ’Ã‚Â³pria conta.")
         return redirect('gerenciar_usuarios')
         
     if request.method == 'POST':
         nome = usuario.nome_completo
         usuario.delete()
-        messages.warning(request, f"Usuário {nome} excluído do sistema.")
+        messages.warning(request, f"UsuÃƒÆ’Ã‚Â¡rio {nome} excluÃƒÆ’Ã‚Â­do do sistema.")
         return redirect('gerenciar_usuarios')
         
     return render(request, 'confirmar_exclusao_usuario.html', {'usuario': usuario})
@@ -459,6 +486,10 @@ def novo_aluno_experimental_turma(request, turma_id):
     
     turma = get_object_or_404(Turma, id=turma_id)
     
+    # Pega os dados do GET (quando clica no botão) ou do POST (quando salva)
+    origem = request.GET.get('origem') or request.POST.get('origem')
+    data_str = request.GET.get('data') or request.POST.get('data')
+    
     if request.method == 'POST':
         form = AlunoExperimentalForm(request.POST)
         if form.is_valid():
@@ -467,12 +498,25 @@ def novo_aluno_experimental_turma(request, turma_id):
             aluno.curso = turma.curso
             aluno.save()
             messages.success(request, f"Aula experimental registrada com sucesso na turma {turma.nome}!")
+            
+            # SE VEIO DA FREQUÊNCIA, VOLTA PARA LÁ
+            if origem == 'frequencia':
+                data_hoje = data_str if data_str else __import__('datetime').date.today().strftime('%Y-%m-%d')
+                return redirect(f"/turmas/{turma.id}/frequencia/?data={data_hoje}")
+                
+            # SENÃO, VAI PARA O CADASTRO DE ALUNOS (padrão)
             return redirect('alunos_turma', turma_id=turma.id)
     else:
         form = AlunoExperimentalForm()
         
-    return render(request, 'experimental_form.html', {'form': form, 'nucleo': turma.nucleo, 'curso': turma.curso, 'turma': turma})
-
+    return render(request, 'experimental_form.html', {
+        'form': form, 
+        'nucleo': turma.nucleo, 
+        'curso': turma.curso, 
+        'turma': turma, 
+        'origem': origem, 
+        'data_str': data_str
+    })
 
 def alternar_status_aluno(request, matricula_id):
     if not request.session.get('usuario_id'):
@@ -653,7 +697,7 @@ class NovoUsuarioForm(forms.ModelForm):
     senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}), min_length=6, max_length=16, required=True, label="Senha (6 a 16 caracteres)")
     email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
     telefone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
-    is_admin = forms.BooleanField(required=False, label="É Administrador?", widget=forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-blue-600 rounded'}))
+    is_admin = forms.BooleanField(required=False, label="ÃƒÆ’Ã¢â‚¬Â° Administrador?", widget=forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-blue-600 rounded'}))
 
     class Meta:
         model = Usuario
@@ -664,7 +708,7 @@ class NovoUsuarioForm(forms.ModelForm):
         if login:
             login = login.lower()
             if Usuario.objects.filter(login=login).exists():
-                raise forms.ValidationError("Este login já está em uso.")
+                raise forms.ValidationError("Este login jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ em uso.")
         return login
 
     def clean_email(self):
@@ -672,7 +716,7 @@ class NovoUsuarioForm(forms.ModelForm):
         if email:
             email = email.lower()
             if Usuario.objects.filter(email=email).exists():
-                raise forms.ValidationError("Este e-mail já está cadastrado.")
+                raise forms.ValidationError("Este e-mail jÃƒÆ’Ã‚Â¡ estÃƒÆ’Ã‚Â¡ cadastrado.")
         return email
 
     def save(self, commit=True):
@@ -691,7 +735,7 @@ def novo_usuario(request):
         form = NovoUsuarioForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, "Usuário cadastrado com sucesso!")
+            messages.success(request, "UsuÃƒÆ’Ã‚Â¡rio cadastrado com sucesso!")
             return redirect('gerenciar_usuarios')
     else:
         form = NovoUsuarioForm()

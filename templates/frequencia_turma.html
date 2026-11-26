@@ -15,9 +15,11 @@
             <p class="text-gray-500 text-sm">{{ turma.nome }} | Núcleo: {{ turma.nucleo.nome }} | Curso: {{ turma.curso.nome }}</p>
         </div>
         <div class="flex flex-wrap gap-2">
-            <a href="{% url 'novo_aluno_experimental_turma' turma.id %}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-3 rounded-lg shadow transition inline-flex items-center text-sm">
-                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                Experimental
+            <a href="{% url 'novo_aluno_experimental_turma' turma.id %}?origem=frequencia&data={{ data_str }}" class="inline-flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg transition-colors gap-2 text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Aula Experimental
             </a>
             <a href="{% url 'novo_aluno_turma' turma.id %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-3 rounded-lg shadow transition inline-flex items-center text-sm">
                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>

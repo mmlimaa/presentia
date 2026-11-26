@@ -9,7 +9,9 @@
 
     <form method="POST" class="space-y-5">
         {% csrf_token %}
-        
+        {% if origem %}<input type="hidden" name="origem" value="{{ origem }}">{% endif %}
+        {% if data_str %}<input type="hidden" name="data" value="{{ data_str }}">{% endif %}
+
         {% for field in form %}
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ field.label }}</label>

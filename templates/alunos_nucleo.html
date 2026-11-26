@@ -1,4 +1,4 @@
-﻿{% extends "base.html" %}
+{% extends "base.html" %}
 {% block title %}Alunos do NÃºcleo{% endblock %}
 {% block content_logado %}
 <div class="mb-6">
@@ -18,9 +18,10 @@
                 </select>
             </form>
             
-            <a href="{% url 'novo_aluno_experimental' nucleo.id %}?curso={{ curso_selecionado.id }}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg shadow transition flex items-center inline-flex">
-                Aula Experimental
-            </a>
+            <a href="{% url 'novo_aluno_experimental_turma' turma.id %}?origem=frequencia&data={{ data_str }}" class="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 transition-colors">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+    Aula Experimental
+</a>
             <a href="{% url 'novo_aluno_nucleo' nucleo.id %}?curso={{ curso_selecionado.id }}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg shadow transition flex items-center inline-flex">
                 Nova MatrÃ­cula
             </a>

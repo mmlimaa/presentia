@@ -1,0 +1,2288 @@
+﻿===== 1. AMBIENTE =====
+Data: 11/26/2026 08:46:22
+Python: Python 3.12.10
+Poetry: Poetry (version 2.5.1)
+Django (global): 6.1.1
+
+===== 2. DJANGO NO PROJETO =====
+Presentia: 6.1.3
+
+===== 3. ARVORE DO PROJETO =====
+backups\backup_2026-10-29_22-03-16.sql
+backups\backup_2026-11-06_16-11-52.sql
+config\settings\base.py
+config\settings\local.py
+config\settings\__init__.py
+config\asgi.py
+config\urls.py
+config\wsgi.py
+config\__init__.py
+presentia\accounts\migrations\__init__.py
+presentia\accounts\admin.py
+presentia\accounts\apps.py
+presentia\accounts\models.py
+presentia\accounts\tests.py
+presentia\accounts\views.py
+presentia\accounts\__init__.py
+presentia\attendance\migrations\__init__.py
+presentia\attendance\admin.py
+presentia\attendance\apps.py
+presentia\attendance\models.py
+presentia\attendance\services.py
+presentia\attendance\tests.py
+presentia\attendance\views.py
+presentia\attendance\__init__.py
+presentia\churches\migrations\__init__.py
+presentia\churches\admin.py
+presentia\churches\apps.py
+presentia\churches\models.py
+presentia\churches\tests.py
+presentia\churches\views.py
+presentia\churches\__init__.py
+presentia\common\templatetags\custom_tags.py
+presentia\common\templatetags\__init__.py
+presentia\common\apps.py
+presentia\common\context_processors.py
+presentia\common\models.py
+presentia\common\__init__.py
+presentia\courses\migrations\__init__.py
+presentia\courses\admin.py
+presentia\courses\apps.py
+presentia\courses\models.py
+presentia\courses\tests.py
+presentia\courses\views.py
+presentia\courses\__init__.py
+presentia\migrations\__init__.py
+presentia\__init__.py
+static\js\frequencia.js
+static\logosistema.png
+templates\alunos_lista.html
+templates\alunos_nucleo.html
+templates\alunos_turma.html
+templates\aluno_editar.html
+templates\aluno_form.html
+templates\base.html
+templates\chamada.html
+templates\confirmar_aprovacao.html
+templates\confirmar_exclusao_igreja.html
+templates\confirmar_exclusao_turma.html
+templates\confirmar_exclusao_usuario.html
+templates\confirmar_recusa.html
+templates\confirmar_status_aluno.html
+templates\consulta_frequencia.html
+templates\copiar_alunos.html
+templates\dashboard.html
+templates\editar_usuario.html
+templates\experimental_form.html
+templates\frequencia_lista.html
+templates\frequencia_turma.html
+templates\gerenciar_solicitacoes.html
+templates\gerenciar_usuarios.html
+templates\igrejas_lista.html
+templates\igreja_form.html
+templates\importar_financeiro.html
+templates\login.html
+templates\novo_usuario.html
+templates\nucleos_lista.html
+templates\nucleo_form.html
+templates\relatorio_frequencia_aulas.html
+templates\resetar_senha.html
+templates\selecionar_turma_chamada.html
+templates\solicitar_acesso.html
+templates\turmas_lista.html
+templates\turma_form.html
+tests\test_common\__init__.py
+tests\conftest.py
+_doc\documentacao.txt
+.env
+.env.example
+.gitignore
+backup.bat
+frequencia.csv
+importar_dados.py
+importar_definitivo.py
+iniciar.bat
+manage.py
+poetry.lock
+prompt de continuidade.txt
+pyproject.toml
+teste_django.py
+_diag_dev.txt
+
+===== 4. pyproject.toml =====
+[project]
+name = "presentia"
+version = "0.1.0"
+description = "Sistema de Controle de Frequencia - Presentia"
+authors = [{ name = "Faculdade Vitoria em Cristo" }]
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Proprietary" }
+dependencies = [
+    "django>=5.2,<6.0",
+    "djangorestframework>=3.16,<4.0",
+    "psycopg[binary]>=3.2,<4.0",
+    "django-environ>=0.12,<1.0",
+    "uuid-utils>=0.10,<1.0",
+    "python-dateutil>=2.9,<3.0",
+    "django-stubs-ext>=5.1",
+    "reportlab>=4.2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.8,<1.0",
+    "mypy>=1.13,<2.0",
+    "django-stubs[compatible-mypy]>=5.1,<6.0",
+    "djangorestframework-stubs>=3.15,<4.0",
+]
+test = [
+    "pytest>=8.3,<9.0",
+    "pytest-django>=4.9,<5.0",
+    "pytest-cov>=6.0,<7.0",
+    "factory-boy>=3.3,<4.0",
+    "freezegun>=1.5,<2.0",
+]
+
+[tool.poetry]
+packages = [{ include = "presentia" }, { include = "config" }]
+
+[build-system]
+requires = ["poetry-core>=2.0"]
+build-backend = "poetry.core.masonry.api"
+
+===== 5. INSTALLED_APPS (settings) =====
+--- base.py ---
+from pathlib import Path
+import environ
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+env = environ.Env(PRESENTIA_DEBUG=(bool, False), PRESENTIA_ALLOWED_HOSTS=(list, []))
+environ.Env.read_env(BASE_DIR / ".env")
+
+SECRET_KEY = env("PRESENTIA_SECRET_KEY", default="django-insecure-dev-key")
+DEBUG = env("PRESENTIA_DEBUG")
+ALLOWED_HOSTS = env("PRESENTIA_ALLOWED_HOSTS")
+
+INSTALLED_APPS = [ "django.contrib.messages", "django.contrib.staticfiles",
+    "rest_framework", "presentia.common", "presentia.accounts",
+    "presentia.churches", "presentia.courses", "presentia.attendance",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware", "django.middleware.csrf.CsrfViewMiddleware", "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "config.urls"
+TEMPLATES = [{"BACKEND": "django.template.backends.django.DjangoTemplates", "DIRS": [BASE_DIR / "templates"], "APP_DIRS": True, "OPTIONS": {"context_processors": ["django.template.context_processors.debug", "django.template.context_processors.request",  "django.contrib.messages.context_processors.messages"]}}]
+WSGI_APPLICATION = "config.wsgi.application"
+
+DATABASES = {"default": env.db("PRESENTIA_DATABASE_URL", default="postgres://PRESENTIA_user:abc%4012345@localhost:5432/Presentia")}
+DATABASES["default"]["OPTIONS"] = {"options": "-c search_path=nucleos,public"}
+LANGUAGE_CODE = "pt-br"
+TIME_ZONE = "America/Sao_Paulo"
+USE_I18N = True
+USE_TZ = True
+STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'dashboard'
+LOGOUT_REDIRECT_URL = 'login'
+
+
+# --- Configuracao do Painel Administrativo (Jazzmin) ---
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Presentia - Painel Administrativo",
+    "site_header": "Presentia",
+    "site_brand": "FVC Presenca",
+    "welcome_sign": "Bem-vindo ao Sistema de Frequencia da FVC",
+    "copyright": "Faculdade Vitoria em Cristo",
+    "show_sidebar": True,
+    "navigation_expanded": True,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "theme": "flatly",
+    "dark_mode_theme": "darkly",
+}
+
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+SESSION_CACHE_ALIAS = "default"
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
+
+MESSAGE_STORAGE = "django.contrib.messages.storage.cookie.CookieStorage"
+
+
+
+
+--- local.py ---
+from .base import *
+DEBUG = True
+
+
+--- __init__.py ---
+
+===== 6. MIGRATIONS APLICADAS =====
+accounts
+ (no migrations)
+attendance
+ (no migrations)
+churches
+ (no migrations)
+courses
+ (no migrations)
+
+===== 7. MODELS (conteudo) =====
+
+--- presentia\accounts\models.py ---
+from django.db import models
+from django.contrib.auth.hashers import make_password, check_password
+import uuid
+
+class Usuario(models.Model):
+    nome_completo = models.CharField(max_length=150)
+    login = models.CharField(max_length=50, unique=True)
+    senha_hash = models.CharField(max_length=255)
+    email = models.EmailField(max_length=100, unique=True)
+    telefone = models.CharField(max_length=15)
+    is_admin = models.BooleanField(default=False)
+    data_cadastro = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tb_usuarios'
+
+    def set_senha(self, senha_limpa):
+        self.senha_hash = make_password(senha_limpa)
+
+    def check_senha(self, senha_limpa):
+        return check_password(senha_limpa, self.senha_hash)
+
+    def __str__(self):
+        return self.nome_completo
+
+class SolicitacaoAcesso(models.Model):
+    nome_completo = models.CharField(max_length=150)
+    login = models.CharField(max_length=50, unique=True)
+    senha_hash = models.CharField(max_length=255)
+    email = models.EmailField(max_length=100, unique=True)
+    telefone = models.CharField(max_length=15)
+    status = models.CharField(max_length=20, default='pendente')
+    data_solicitacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tb_solicitacoes_acesso'
+
+    def __str__(self):
+        return self.nome_completo
+
+class Aluno(models.Model):
+    nome = models.CharField(max_length=150)
+    telefone = models.CharField(max_length=11)
+    email = models.EmailField(max_length=100, unique=True)
+    data_inicio = models.DateField()
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tb_alunos'
+        ordering = ["nome"]
+
+    def __str__(self):
+        return self.nome
+
+
+
+--- presentia\attendance\models.py ---
+from django.db import models
+import uuid
+from presentia.courses.models import Aula, Nucleo, Curso, Turma
+from presentia.accounts.models import Aluno
+
+class Matricula(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    aluno = models.ForeignKey(Aluno, on_delete=models.CASCADE, related_name="matriculas")
+    nucleo = models.ForeignKey(Nucleo, on_delete=models.CASCADE, related_name="matriculas", null=True, blank=True)
+    curso = models.ForeignKey(Curso, on_delete=models.PROTECT, related_name="matriculas", null=True, blank=True)
+    turma = models.ForeignKey(Turma, on_delete=models.CASCADE, related_name="matriculas", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    ativo = models.BooleanField(default=True)
+    status_pagamento = models.CharField(max_length=20, default='Em dia')
+
+    class Meta:
+        db_table = 'tb_matriculas'
+        # Removemos a constraint antiga e deixamos o banco gerenciar a unicidade por turma se necessario
+        # constraints = [
+        #     models.UniqueConstraint(fields=["aluno", "turma"], name="idx_unique_aluno_turma")
+        # ]
+
+    def __str__(self) -> str:
+        return f"{self.aluno.nome} na turma {self.turma.nome if self.turma else 'Sem Turma'}"
+
+class Frequencia(models.Model):
+    class Status(models.TextChoices):
+        PRESENTE = "presente", "Presente"
+        AUSENTE = "ausente", "Ausente"
+        JUSTIFICADA = "justificada", "Falta Justificada"
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    aula = models.ForeignKey(Aula, on_delete=models.CASCADE, related_name="frequencias")
+    matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE, related_name="frequencias")
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PRESENTE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tb_frequencias'
+        constraints = [
+            models.UniqueConstraint(fields=["aula", "matricula"], name="idx_unique_aula_matricula")
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.matricula.aluno.nome} - {self.aula.data}: {self.get_status_display()}"
+
+class AlunoExperimental(models.Model):
+    id = models.AutoField(primary_key=True)
+    nome_completo = models.CharField(max_length=150)
+    celular = models.CharField(max_length=11, unique=True)
+    data_visita = models.DateTimeField(auto_now_add=True)
+    nucleo = models.ForeignKey(Nucleo, on_delete=models.CASCADE, related_name="experimentais")
+    curso = models.ForeignKey(Curso, on_delete=models.PROTECT, related_name="experimentais", null=True, blank=True)
+
+    class Meta:
+        db_table = "tb_alunos_experimentais"
+        ordering = ["-data_visita"]
+
+    def __str__(self) -> str:
+        return f"{self.nome_completo} - {self.celular}"
+
+
+class Mensalidade(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE, related_name='mensalidades')
+    numero_mes = models.PositiveSmallIntegerField()
+    status = models.CharField(max_length=20)
+    data_status = models.DateField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'tb_mensalidades'
+        constraints = [
+            models.UniqueConstraint(fields=['matricula', 'numero_mes'], name='idx_unique_matricula_mes')
+        ]
+
+    def __str__(self):
+        return f"{self.matricula.aluno.nome} - Mes {self.numero_mes}: {self.status}"
+
+--- presentia\churches\models.py ---
+from django.db import models
+import uuid
+
+class Igreja(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nome = models.CharField(max_length=150)
+    cidade = models.CharField(max_length=100)
+    endereco = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'tb_igrejas'
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return f"{self.nome} ({self.cidade})"
+
+
+
+--- presentia\common\models.py ---
+from django.db import models
+import uuid
+
+class BaseModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+        ordering = ["-created_at"]
+
+
+
+--- presentia\courses\models.py ---
+from django.db import models
+import uuid
+from presentia.churches.models import Igreja
+
+class BaseModel(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        abstract = True
+
+class Curso(BaseModel):
+    nome = models.CharField(max_length=100, unique=True)
+    ordem = models.PositiveSmallIntegerField(unique=True)
+
+    class Meta:
+        db_table = "tb_cursos"
+        ordering = ["ordem"]
+
+    def __str__(self) -> str:
+        return f"{self.ordem}o - {self.nome}"
+
+class Nucleo(BaseModel):
+    nome = models.CharField(max_length=150)
+    igreja = models.ForeignKey(Igreja, on_delete=models.PROTECT, related_name="nucleos")
+
+    class Meta:
+        db_table = "tb_nucleos"
+        ordering = ["nome"]
+
+    def __str__(self) -> str:
+        return f"{self.nome} - {self.igreja.nome}"
+
+class Turma(BaseModel):
+    nome = models.CharField(max_length=100)
+    nucleo = models.ForeignKey(Nucleo, on_delete=models.CASCADE, related_name="turmas")
+    curso = models.ForeignKey(Curso, on_delete=models.PROTECT, related_name="turmas")
+    data_inicio = models.DateField()
+    data_fim = models.DateField()
+
+    class Meta:
+        db_table = "tb_turmas"
+        ordering = ["-data_inicio"]
+
+    def __str__(self) -> str:
+        return f"{self.nome} ({self.curso.nome})"
+
+class Aula(BaseModel):
+    nucleo = models.ForeignKey(Nucleo, on_delete=models.CASCADE, related_name="aulas")
+    curso = models.ForeignKey(Curso, on_delete=models.PROTECT, related_name="aulas", null=True, blank=True)
+    turma = models.ForeignKey(Turma, on_delete=models.SET_NULL, related_name="aulas", null=True, blank=True)
+    data = models.DateField()
+    topico = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        db_table = "tb_aulas"
+        ordering = ["-data"]
+
+    def __str__(self) -> str:
+        return f"{self.nucleo.nome} - {self.data}"
+
+===== 8. SERVICES / SELECTORS / SERIALIZERS / VIEWS =====
+
+--- presentia\accounts\views.py ---
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from django import forms
+from .models import Usuario, SolicitacaoAcesso, Aluno
+from presentia.courses.models import Nucleo, Curso
+from presentia.attendance.models import Matricula, AlunoExperimental, Aula, Frequencia
+from django.contrib.auth.hashers import make_password
+
+# --- FORMULÁRIO DE SOLICITAÇÃO DE ACESSO ---
+class SolicitacaoAcessoForm(forms.ModelForm):
+    nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'NOME COMPLETO'}))
+    login = forms.CharField(max_length=30, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'login'}))
+    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'Senha (6 a 16 caracteres)'}), min_length=6, max_length=16, required=True)
+    email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': 'email@exemplo.com'}))
+    telefone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'placeholder': '(11) 99999-9999'}))
+
+    class Meta:
+        model = SolicitacaoAcesso
+        fields = ['nome_completo', 'login', 'email', 'telefone']
+
+    def clean_nome_completo(self):
+        nome = self.cleaned_data.get('nome_completo')
+        return nome.upper() if nome else nome
+
+    def clean_login(self):
+        login = self.cleaned_data.get('login')
+        if login:
+            login = login.lower()
+            if Usuario.objects.filter(login=login).exists() or SolicitacaoAcesso.objects.filter(login=login).exists():
+                raise forms.ValidationError("Este login já está em uso ou em análise.")
+        return login
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.lower()
+            if Usuario.objects.filter(email=email).exists() or SolicitacaoAcesso.objects.filter(email=email).exists():
+                raise forms.ValidationError("Este e-mail já está cadastrado ou em análise.")
+        return email
+
+    def save(self, commit=True):
+        solicitacao = super().save(commit=False)
+        solicitacao.senha_hash = make_password(self.cleaned_data['senha'])
+        if commit:
+            solicitacao.save()
+        return solicitacao
+
+# --- VIEWS DE AUTENTICAÇÃO ---
+def login_view(request):
+    if request.session.get('usuario_id'):
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        login_digitado = request.POST.get('username', '').strip().lower()
+        senha_digitada = request.POST.get('password', '').strip()
+
+        if not login_digitado or not senha_digitada:
+            messages.error(request, "Por favor, preencha todos os campos.")
+            return render(request, 'login.html')
+
+        try:
+            user = Usuario.objects.get(login=login_digitado)
+            if user.check_senha(senha_digitada):
+                request.session['usuario_id'] = user.id
+                request.session['usuario_nome'] = user.nome_completo
+                request.session['usuario_is_admin'] = user.is_admin
+                return redirect('dashboard')
+            else:
+                messages.error(request, "Senha incorreta.")
+        except Usuario.DoesNotExist:
+            messages.error(request, "Usuário não encontrado.")
+            
+    return render(request, 'login.html')
+
+def logout_view(request):
+    request.session.flush()
+    return redirect('login')
+
+class SolicitacaoAcessoView(CreateView):
+    form_class = SolicitacaoAcessoForm
+    template_name = 'solicitar_acesso.html'
+    success_url = reverse_lazy('login')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Solicitação enviada com sucesso! Aguarde a aprovação.")
+        return super().form_valid(form)
+
+# --- FORMULÁRIO E VIEWS DE ALUNO ---
+class AlunoForm(forms.ModelForm):
+    nome = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': 'Nome completo'}))
+    telefone = forms.CharField(max_length=11, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': '11999999999'}))
+    email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'placeholder': 'email@exemplo.com'}))
+    data_inicio = forms.DateField(
+        widget=forms.DateInput(
+            format='%Y-%m-%d', 
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500', 'type': 'date'}
+        ), 
+        label="Data de Matrícula"
+    )
+
+    class Meta:
+        model = Aluno
+        fields = ['nome', 'telefone', 'email', 'data_inicio']
+
+    def clean_telefone(self):
+        tel = self.cleaned_data.get('telefone')
+        if tel:
+            tel = ''.join(filter(str.isdigit, tel))
+            if len(tel) != 11:
+                raise forms.ValidationError("O telefone deve ter 11 dígitos (DDD + número).")
+        return tel
+
+def alunos_nucleo(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    cursos = Curso.objects.all().order_by('ordem')
+    
+    # Se nenhum curso foi selecionado, pega o primeiro por padrao
+    curso_id = request.GET.get('curso')
+    if curso_id:
+        curso_selecionado = get_object_or_404(Curso, id=curso_id)
+    else:
+        curso_selecionado = cursos.first()
+        
+    if curso_selecionado:
+        matriculas = Matricula.objects.filter(nucleo=nucleo, curso=curso_selecionado).select_related('aluno').order_by('aluno__nome')
+        experimentais = AlunoExperimental.objects.filter(nucleo=nucleo, curso=curso_selecionado).order_by('-data_visita')
+    else:
+        matriculas = Matricula.objects.none()
+        experimentais = AlunoExperimental.objects.none()
+    
+    return render(request, 'alunos_nucleo.html', {
+        'nucleo': nucleo, 
+        'matriculas': matriculas, 
+        'experimentais': experimentais,
+        'cursos': cursos,
+        'curso_selecionado': curso_selecionado
+    })
+
+
+def novo_aluno_nucleo(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    curso_id = request.GET.get('curso')
+    curso = get_object_or_404(Curso, id=curso_id) if curso_id else None
+    
+    if not curso:
+        messages.error(request, "Por favor, selecione um período antes de matricular.")
+        return redirect('alunos_nucleo', nucleo_id=nucleo.id)
+    
+    if request.method == 'POST':
+        form = AlunoForm(request.POST)
+        if form.is_valid():
+            aluno = form.save()
+            Matricula.objects.create(aluno=aluno, nucleo=nucleo, curso=curso)
+            messages.success(request, f"Aluno matriculado com sucesso no período {curso.nome}!")
+            return redirect(f"/nucleos/{nucleo.id}/alunos/?curso={curso.id}")
+    else:
+        form = AlunoForm()
+        
+    return render(request, 'aluno_form.html', {'form': form, 'nucleo': nucleo, 'curso': curso})
+
+def editar_aluno(request, aluno_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    aluno = get_object_or_404(Aluno, id=aluno_id)
+    nucleo_id = request.GET.get('nucleo_id') or request.POST.get('nucleo_id')
+    turma_id = request.GET.get('turma_id') or request.POST.get('turma_id')
+    origem = request.GET.get('origem') or request.POST.get('origem')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id) if nucleo_id else None
+    
+    if request.method == 'POST':
+        form = AlunoForm(request.POST, instance=aluno)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Dados do aluno atualizados com sucesso!")
+            
+            # Redirecionamento inteligente baseado na origem
+            if origem == 'frequencia' and turma_id:
+                # Volta para a frequencia
+                data_hoje = __import__('datetime').date.today().strftime('%Y-%m-%d')
+                return redirect(f"/turmas/{turma_id}/frequencia/?data={data_hoje}")
+            elif turma_id:
+                return redirect('alunos_turma', turma_id=turma_id)
+            elif nucleo_id:
+                return redirect('alunos_nucleo', nucleo_id=nucleo_id)
+            return redirect('dashboard')
+    else:
+        form = AlunoForm(instance=aluno)
+        
+    return render(request, 'aluno_editar.html', {
+        'form': form, 
+        'aluno': aluno, 
+        'nucleo': nucleo,
+        'turma_id': turma_id,
+        'origem': origem
+    })
+
+
+def clean_celular(self):
+        celular = self.cleaned_data.get('celular')
+        if celular:
+            celular = ''.join(filter(str.isdigit, celular))
+            if len(celular) != 11:
+                raise forms.ValidationError("O celular deve ter 11 dígitos (DDD + número).")
+            if AlunoExperimental.objects.filter(celular=celular).exists():
+                raise forms.ValidationError("Este celular já foi utilizado em uma aula experimental anteriormente. O aluno deve ser matriculado como regular.")
+        return celular
+
+def novo_aluno_experimental(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    curso_id = request.GET.get('curso')
+    curso = get_object_or_404(Curso, id=curso_id) if curso_id else None
+    
+    if not curso:
+        messages.error(request, "Por favor, selecione um período antes de cadastrar um aluno experimental.")
+        return redirect('alunos_nucleo', nucleo_id=nucleo.id)
+
+    if request.method == 'POST':
+        form = AlunoExperimentalForm(request.POST)
+        if form.is_valid():
+            aluno = form.save(commit=False)
+            aluno.nucleo = nucleo
+            aluno.curso = curso
+            aluno.save()
+            messages.success(request, f"Aula experimental registrada com sucesso no período {curso.nome}!")
+            return redirect(f"/nucleos/{nucleo.id}/alunos/?curso={curso.id}")
+    else:
+        form = AlunoExperimentalForm()
+        
+    return render(request, 'experimental_form.html', {'form': form, 'nucleo': nucleo, 'curso': curso})
+
+
+# --- GESTAO DE SOLICITACOES DE ACESSO ---
+def gerenciar_solicitacoes(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    # Apenas admin pode acessar
+    if not request.session.get('usuario_is_admin'):
+        messages.error(request, "Acesso negado. Apenas administradores podem gerenciar solicitações.")
+        return redirect('dashboard')
+        
+    solicitacoes = SolicitacaoAcesso.objects.all().order_by('-data_solicitacao')
+    return render(request, 'gerenciar_solicitacoes.html', {'solicitacoes': solicitacoes})
+
+def aprovar_solicitacao(request, solicitacao_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    solicitacao = get_object_or_404(SolicitacaoAcesso, id=solicitacao_id)
+    
+    if request.method == 'POST':
+        # Cria o usuario na tabela oficial
+        novo_usuario = Usuario(
+            nome_completo=solicitacao.nome_completo,
+            login=solicitacao.login,
+            senha_hash=solicitacao.senha_hash, # Ja esta criptografada
+            email=solicitacao.email,
+            telefone=solicitacao.telefone,
+            is_admin=False # Por padrao nao e admin
+        )
+        novo_usuario.save()
+        
+        # Apaga a solicitacao para nao acumular lixo
+        solicitacao.delete()
+        
+        messages.success(request, f"Usuário {novo_usuario.nome_completo} aprovado com sucesso!")
+        return redirect('gerenciar_solicitacoes')
+        
+    return render(request, 'confirmar_aprovacao.html', {'solicitacao': solicitacao})
+
+def recusar_solicitacao(request, solicitacao_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    solicitacao = get_object_or_404(SolicitacaoAcesso, id=solicitacao_id)
+    
+    if request.method == 'POST':
+        nome = solicitacao.nome_completo
+        solicitacao.delete()
+        messages.warning(request, f"Solicitação de {nome} recusada e removida.")
+        return redirect('gerenciar_solicitacoes')
+        
+    return render(request, 'confirmar_recusa.html', {'solicitacao': solicitacao})
+
+
+# --- ADMINISTRACAO DE USUARIOS ---
+def gerenciar_usuarios(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    usuarios = Usuario.objects.all().order_by('nome_completo')
+    return render(request, 'gerenciar_usuarios.html', {'usuarios': usuarios})
+
+def resetar_senha(request, usuario_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    
+    if request.method == 'POST':
+        nova_senha = request.POST.get('nova_senha')
+        if len(nova_senha) < 6 or len(nova_senha) > 16:
+            messages.error(request, "A senha deve ter entre 6 e 16 caracteres.")
+        else:
+            usuario.set_senha(nova_senha)
+            usuario.save()
+            messages.success(request, f"Senha do usuário {usuario.nome_completo} redefinida com sucesso!")
+            return redirect('gerenciar_usuarios')
+            
+    return render(request, 'resetar_senha.html', {'usuario': usuario})
+
+def alternar_admin(request, usuario_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    
+    # Nao permite que o admin logado remova seu proprio privilegio
+    if usuario.id == request.session.get('usuario_id'):
+        messages.error(request, "Você não pode remover seu próprio status de administrador.")
+        return redirect('gerenciar_usuarios')
+        
+    usuario.is_admin = not usuario.is_admin
+    usuario.save()
+    
+    status = "promovido a" if usuario.is_admin else "rebaixado de"
+    messages.success(request, f"Usuário {usuario.nome_completo} {status} Administrador.")
+    return redirect('gerenciar_usuarios')
+
+def excluir_usuario(request, usuario_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    
+    if usuario.id == request.session.get('usuario_id'):
+        messages.error(request, "Você não pode excluir sua própria conta.")
+        return redirect('gerenciar_usuarios')
+        
+    if request.method == 'POST':
+        nome = usuario.nome_completo
+        usuario.delete()
+        messages.warning(request, f"Usuário {nome} excluído do sistema.")
+        return redirect('gerenciar_usuarios')
+        
+    return render(request, 'confirmar_exclusao_usuario.html', {'usuario': usuario})
+
+
+# --- EDICAO DE USUARIO ---
+class EditarUsuarioForm(forms.ModelForm):
+    nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    login = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    telefone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+
+    class Meta:
+        model = Usuario
+        fields = ['nome_completo', 'login', 'email', 'telefone']
+
+    def clean_login(self):
+        login = self.cleaned_data.get('login', '').lower()
+        # Verifica se o login ja existe em outro usuario
+        if Usuario.objects.filter(login=login).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError("Este login ja esta em uso por outro usuario.")
+        return login
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email', '').lower()
+        if Usuario.objects.filter(email=email).exclude(id=self.instance.id).exists():
+            raise forms.ValidationError("Este e-mail ja esta cadastrado para outro usuario.")
+        return email
+
+def editar_usuario(request, usuario_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    usuario = get_object_or_404(Usuario, id=usuario_id)
+    
+    if request.method == 'POST':
+        form = EditarUsuarioForm(request.POST, instance=usuario)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Dados do usuario {usuario.nome_completo} atualizados com sucesso!")
+            return redirect('gerenciar_usuarios')
+    else:
+        form = EditarUsuarioForm(instance=usuario)
+        
+    return render(request, 'editar_usuario.html', {'form': form, 'usuario': usuario})
+
+
+
+
+from presentia.courses.models import Turma
+
+# --- ALUNOS DA TURMA ---
+def alunos_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    # Pega o filtro da URL
+    status_filtro = request.GET.get('status', 'todos')
+    
+    # Busca TODAS as matriculas da turma (sem filtro de ativo aqui)
+    matriculas = Matricula.objects.filter(turma=turma).select_related('aluno').order_by('aluno__nome')
+    
+    # Aplica o filtro de status
+    if status_filtro == 'ativos':
+        matriculas = matriculas.filter(ativo=True)
+    elif status_filtro == 'desligados':
+        matriculas = matriculas.filter(ativo=False)
+    
+    # Busca os experimentais
+    experimentais = AlunoExperimental.objects.filter(nucleo=turma.nucleo, curso=turma.curso).order_by('-data_visita')
+    
+    return render(request, 'alunos_turma.html', {
+        'turma': turma,
+        'matriculas': matriculas,
+        'experimentais': experimentais,
+        'status_filtro': status_filtro
+    })
+
+
+def novo_aluno_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    if request.method == 'POST':
+        form = AlunoForm(request.POST)
+        if form.is_valid():
+            aluno = form.save()
+            Matricula.objects.create(aluno=aluno, nucleo=turma.nucleo, curso=turma.curso, turma=turma)
+            messages.success(request, f"Aluno matriculado com sucesso na turma {turma.nome}!")
+            return redirect('alunos_turma', turma_id=turma.id)
+    else:
+        form = AlunoForm()
+        
+    return render(request, 'aluno_form.html', {'form': form, 'nucleo': turma.nucleo, 'curso': turma.curso, 'turma': turma})
+
+def novo_aluno_experimental_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    if request.method == 'POST':
+        form = AlunoExperimentalForm(request.POST)
+        if form.is_valid():
+            aluno = form.save(commit=False)
+            aluno.nucleo = turma.nucleo
+            aluno.curso = turma.curso
+            aluno.save()
+            messages.success(request, f"Aula experimental registrada com sucesso na turma {turma.nome}!")
+            return redirect('alunos_turma', turma_id=turma.id)
+    else:
+        form = AlunoExperimentalForm()
+        
+    return render(request, 'experimental_form.html', {'form': form, 'nucleo': turma.nucleo, 'curso': turma.curso, 'turma': turma})
+
+
+def alternar_status_aluno(request, matricula_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    matricula = get_object_or_404(Matricula, id=matricula_id)
+    
+    if request.method == 'POST':
+        # Inverte o status
+        novo_status = not matricula.ativo
+        matricula.ativo = novo_status
+        
+        # Se estiver sendo REATIVADO, garante que o status de pagamento seja resetado
+        # para que ele volte a integrar a planilha regular (Em dia por padrao)
+        if novo_status == True:
+            matricula.status_pagamento = 'Em dia'
+            
+        matricula.save(update_fields=['ativo', 'status_pagamento'])
+        
+        status_texto = "ativado" if novo_status else "desligado"
+        messages.success(request, f"Aluno {matricula.aluno.nome} {status_texto} com sucesso!")
+        
+        if matricula.turma:
+            return redirect('alunos_turma', turma_id=matricula.turma.id)
+        return redirect('dashboard')
+        
+    return render(request, 'confirmar_status_aluno.html', {'matricula': matricula})
+
+
+def frequencia_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    data_str = request.GET.get('data')
+    
+    from datetime import datetime
+    if not data_str:
+        data_str = datetime.today().strftime('%Y-%m-%d')
+        
+    try:
+        data_aula = datetime.strptime(data_str, '%Y-%m-%d').date()
+    except ValueError:
+        data_aula = datetime.today().date()
+        data_str = data_aula.strftime('%Y-%m-%d')
+
+    from presentia.attendance.models import Aula as AulaModel, Frequencia as FreqModel
+    
+    # 1. Busca ou cria a Aula
+    aula = AulaModel.objects.filter(nucleo=turma.nucleo, turma=turma, data=data_aula).first()
+    if not aula:
+        aula = AulaModel.objects.create(nucleo=turma.nucleo, turma=turma, data=data_aula, topico='Aula Regular', curso=turma.curso)
+    
+    # 2. Busca as frequencias existentes
+    frequencias = FreqModel.objects.filter(aula=aula).select_related('matricula__aluno').order_by('matricula__aluno__nome')
+    
+    # 3. Se nao existirem, cria para os alunos ativos
+    if not frequencias.exists():
+        matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True).order_by('aluno__nome')
+        novas_frequencias = [
+            FreqModel(aula=aula, matricula=mat, status=FreqModel.Status.AUSENTE) 
+            for mat in matriculas_ativas
+        ]
+        FreqModel.objects.bulk_create(novas_frequencias)
+        frequencias = FreqModel.objects.filter(aula=aula).select_related('matricula__aluno').order_by('matricula__aluno__nome')
+
+    # 4. Processa o POST
+    if request.method == 'POST':
+        for freq in frequencias:
+            novo_status = request.POST.get(f'status_{freq.id}')
+            if novo_status in [FreqModel.Status.PRESENTE, FreqModel.Status.AUSENTE, FreqModel.Status.JUSTIFICADA]:
+                freq.status = novo_status
+                freq.save()
+        messages.success(request, "Chamada salva com sucesso!")
+        return redirect(f"{request.path}?data={data_str}")
+
+    # 5. Calcula % Frequencia (Presencas / Total de Aulas Lancadas)
+    total_aulas_turma = AulaModel.objects.filter(turma=turma).count()
+    
+    for freq in frequencias:
+        if total_aulas_turma > 0:
+            presencas_aluno = FreqModel.objects.filter(
+                matricula=freq.matricula, 
+                status=FreqModel.Status.PRESENTE
+            ).count()
+            freq.percentual_frequencia = int((presencas_aluno / total_aulas_turma) * 100)
+        else:
+            freq.percentual_frequencia = 0
+
+    # 6. Contadores
+    total_alunos = frequencias.count()
+    total_presentes = frequencias.filter(status=FreqModel.Status.PRESENTE).count()
+    total_ausentes = frequencias.filter(status=FreqModel.Status.AUSENTE).count()
+    total_justificadas = frequencias.filter(status=FreqModel.Status.JUSTIFICADA).count()
+
+    # 7. Busca alunos experimentais
+    experimentais = AlunoExperimental.objects.filter(nucleo=turma.nucleo, curso=turma.curso, data_visita__date=data_aula).order_by('nome_completo')
+    
+    # 8. Datas com frequencia para o calendario
+    datas_com_frequencia = AulaModel.objects.filter(turma=turma).values_list('data', flat=True)
+    datas_iso = [d.strftime('%Y-%m-%d') for d in datas_com_frequencia]
+    
+    return render(request, 'frequencia_turma.html', {
+        'turma': turma,
+        'frequencias': frequencias,
+        'experimentais': experimentais,
+        'data_str': data_str,
+        'datas_com_frequencia': datas_iso,
+        'total_alunos': total_alunos,
+        'total_presentes': total_presentes,
+        'total_ausentes': total_ausentes,
+        'total_justificadas': total_justificadas,
+    })
+
+
+def copiar_alunos_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma_destino = get_object_or_404(Turma, id=turma_id)
+    turmas_origem = Turma.objects.filter(nucleo=turma_destino.nucleo).exclude(id=turma_destino.id).order_by('-data_inicio')
+    
+    turma_origem_id = request.GET.get('origem')
+    alunos_origem = []
+    
+    if turma_origem_id:
+        alunos_origem = Matricula.objects.filter(turma_id=turma_origem_id, ativo=True).select_related('aluno').order_by('aluno__nome')
+        
+    return render(request, 'copiar_alunos.html', {
+        'turma_destino': turma_destino,
+        'turmas_origem': turmas_origem,
+        'turma_origem_id': turma_origem_id,
+        'alunos_origem': alunos_origem
+    })
+
+def processar_copia_alunos(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+        
+    if request.method == 'POST':
+        turma_destino = get_object_or_404(Turma, id=turma_id)
+        alunos_selecionados = request.POST.getlist('alunos_selecionados')
+        
+        matriculas_criadas = 0
+        for aluno_id in alunos_selecionados:
+            if not Matricula.objects.filter(aluno_id=aluno_id, turma=turma_destino).exists():
+                Matricula.objects.create(
+                    aluno_id=aluno_id,
+                    nucleo=turma_destino.nucleo,
+                    curso=turma_destino.curso,
+                    turma=turma_destino,
+                    ativo=True
+                )
+                matriculas_criadas += 1
+                
+        messages.success(request, f"{matriculas_criadas} alunos copiados com sucesso!")
+        return redirect('alunos_turma', turma_id=turma_destino.id)
+        
+    return redirect('alunos_turma', turma_id=turma_id)
+
+
+def selecionar_turma_chamada(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.courses.models import Turma
+    
+    # Busca todas as turmas
+    turmas = Turma.objects.all().select_related('nucleo', 'curso').order_by('-data_inicio')
+    
+    return render(request, 'selecionar_turma_chamada.html', {'turmas': turmas})
+
+
+# --- NOVO USUARIO ---
+class NovoUsuarioForm(forms.ModelForm):
+    nome_completo = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    login = forms.CharField(max_length=50, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}), min_length=6, max_length=16, required=True, label="Senha (6 a 16 caracteres)")
+    email = forms.EmailField(max_length=100, required=True, widget=forms.EmailInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    telefone = forms.CharField(max_length=15, required=True, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg focus:ring-blue-500'}))
+    is_admin = forms.BooleanField(required=False, label="É Administrador?", widget=forms.CheckboxInput(attrs={'class': 'w-5 h-5 text-blue-600 rounded'}))
+
+    class Meta:
+        model = Usuario
+        fields = ['nome_completo', 'login', 'email', 'telefone']
+
+    def clean_login(self):
+        login = self.cleaned_data.get('login')
+        if login:
+            login = login.lower()
+            if Usuario.objects.filter(login=login).exists():
+                raise forms.ValidationError("Este login já está em uso.")
+        return login
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.lower()
+            if Usuario.objects.filter(email=email).exists():
+                raise forms.ValidationError("Este e-mail já está cadastrado.")
+        return email
+
+    def save(self, commit=True):
+        usuario = super().save(commit=False)
+        usuario.senha_hash = make_password(self.cleaned_data['senha'])
+        usuario.is_admin = self.cleaned_data.get('is_admin', False)
+        if commit:
+            usuario.save()
+        return usuario
+
+def novo_usuario(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    if request.method == 'POST':
+        form = NovoUsuarioForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Usuário cadastrado com sucesso!")
+            return redirect('gerenciar_usuarios')
+    else:
+        form = NovoUsuarioForm()
+        
+    return render(request, 'novo_usuario.html', {'form': form})
+
+--- presentia\attendance\services.py ---
+from django.db import transaction
+from presentia.courses.models import Aula
+from presentia.attendance.models import Matricula, Frequencia
+
+@transaction.atomic
+def gerar_frequencia_em_lote(aula: Aula) -> None:
+    """
+    Gera os registros de frequencia para todos os alunos matriculados no nucleo da aula.
+    Define o status inicial como AUSENTE.
+    """
+    matriculas = Matricula.objects.filter(nucleo=aula.nucleo)
+    frequencias_existentes = Frequencia.objects.filter(aula=aula).values_list('matricula_id', flat=True)
+    
+    novas_frequencias = []
+    for matricula in matriculas:
+        if matricula.id not in frequencias_existentes:
+            novas_frequencias.append(
+                Frequencia(
+                    aula=aula,
+                    matricula=matricula,
+                    status=Frequencia.Status.AUSENTE
+                )
+            )
+            
+    if novas_frequencias:
+        Frequencia.objects.bulk_create(novas_frequencias)
+
+
+
+--- presentia\attendance\views.py ---
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.http import HttpResponse, JsonResponse
+from datetime import datetime, date
+import calendar
+import csv
+import io
+import re
+
+from .models import Frequencia, Matricula, AlunoExperimental, Mensalidade
+from presentia.courses.models import Nucleo, Aula, Curso, Turma
+from presentia.churches.models import Igreja
+from presentia.accounts.models import Aluno
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import landscape, A4, portrait
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+
+# --- DASHBOARD ---
+def dashboard_view(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    total_alunos = Aluno.objects.count()
+    total_nucleos = Nucleo.objects.count()
+    total_aulas = Aula.objects.count()
+    
+    ultimas_aulas = Aula.objects.filter(
+        turma__isnull=False,
+        frequencias__isnull=False
+    ).distinct().select_related('turma', 'turma__curso', 'nucleo').order_by('-data', '-created_at')[:5]
+    
+    contexto = {
+        'total_alunos': total_alunos,
+        'total_nucleos': total_nucleos,
+        'total_aulas': total_aulas,
+        'ultimas_aulas': ultimas_aulas,
+    }
+    return render(request, 'dashboard.html', contexto)
+
+# --- FREQUENCIA ---
+def lista_frequencia(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.churches.models import Igreja
+    from presentia.courses.models import Nucleo
+    
+    igreja_id = request.GET.get('igreja')
+    nucleo_id = request.GET.get('nucleo')
+    
+    igrejas = Igreja.objects.all().order_by('nome')
+    nucleos = Nucleo.objects.all().order_by('nome')
+    
+    if igreja_id:
+        nucleos = nucleos.filter(igreja_id=igreja_id)
+        
+    turmas_dados = []
+    
+    if nucleo_id:
+        from django.db import connection
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                SELECT t.id, t.nome, t.data_inicio, t.data_fim, c.nome as curso_nome
+                FROM tb_turmas t
+                JOIN tb_cursos c ON c.id = t.curso_id
+                WHERE t.nucleo_id = %s::uuid
+                ORDER BY t.data_inicio DESC
+            ''', [nucleo_id])
+            rows = cursor.fetchall()
+            
+        for row in rows:
+            turma_id = str(row[0])
+            turma_nome = row[1]
+            data_inicio = row[2]
+            data_fim = row[3]
+            curso_nome = row[4]
+            
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = true", [turma_id])
+                ativos = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = false", [turma_id])
+                inativos = cursor.fetchone()[0]
+                
+                cursor.execute("SELECT nucleo_id, curso_id FROM tb_turmas WHERE id = %s::uuid", [turma_id])
+                turma_nucleo_id, turma_curso_id = cursor.fetchone()
+                
+                cursor.execute("SELECT COUNT(*) FROM tb_alunos_experimentais WHERE nucleo_id = %s::uuid AND curso_id = %s::uuid", [str(turma_nucleo_id), str(turma_curso_id)])
+                experimentais = cursor.fetchone()[0]
+                
+            turmas_dados.append({
+                'id': turma_id,
+                'nome': turma_nome,
+                'curso': curso_nome,
+                'data_inicio': data_inicio,
+                'data_fim': data_fim,
+                'ativos': ativos,
+                'inativos': inativos,
+                'experimentais': experimentais
+            })
+            
+    return render(request, 'frequencia_lista.html', {
+        'igrejas': igrejas,
+        'nucleos': nucleos,
+        'turmas': turmas_dados,
+        'igreja_id': igreja_id,
+        'nucleo_id': nucleo_id
+    })
+
+def chamada_nucleo(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    turma_id = request.GET.get('turma')
+    
+    if not turma_id:
+        messages.error(request, "Selecione uma turma.")
+        return redirect('frequencia_lista')
+        
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    data_str = request.GET.get('data')
+    if not data_str:
+        data_str = datetime.today().strftime('%Y-%m-%d')
+    
+    data_aula = datetime.strptime(data_str, '%Y-%m-%d').date()
+
+    aula, created = Aula.objects.get_or_create(
+        nucleo=nucleo,
+        data=data_aula,
+        turma=turma,
+        defaults={'topico': 'Aula Regular', 'curso': turma.curso}
+    )
+    
+    frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+    
+    if not frequencias.exists():
+        matriculas_ativas = Matricula.objects.filter(turma=turma, ativo=True)
+        novas_frequencias = [
+            Frequencia(aula=aula, matricula=mat, status=Frequencia.Status.AUSENTE) 
+            for mat in matriculas_ativas
+        ]
+        Frequencia.objects.bulk_create(novas_frequencias)
+        frequencias = Frequencia.objects.filter(aula=aula).select_related('matricula__aluno')
+
+    if request.method == 'POST':
+        for freq in frequencias:
+            novo_status = request.POST.get(f'status_{freq.id}')
+            if novo_status in [Frequencia.Status.PRESENTE, Frequencia.Status.AUSENTE, Frequencia.Status.JUSTIFICADA]:
+                freq.status = novo_status
+                freq.save()
+        messages.success(request, "Chamada salva com sucesso!")
+        return redirect(f"{request.path}?data={data_str}&turma={turma_id}")
+
+    experimentais = AlunoExperimental.objects.filter(nucleo=nucleo, curso=turma.curso, data_visita__date=data_aula)
+    
+    return render(request, 'chamada.html', {
+        'nucleo': nucleo,
+        'turma': turma,
+        'aula': aula,
+        'frequencias': frequencias,
+        'experimentais': experimentais,
+        'data_str': data_str,
+    })
+
+# --- RELATORIOS ---
+def consulta_frequencia(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.churches.models import Igreja
+    from presentia.courses.models import Nucleo, Turma
+    
+    igrejas = Igreja.objects.all().order_by('nome')
+    nucleos = Nucleo.objects.all().order_by('nome')
+    
+    igreja_id = request.GET.get('igreja')
+    nucleo_id = request.GET.get('nucleo')
+    turma_id = request.GET.get('turma')
+    aluno_nome = request.GET.get('aluno_nome')
+    
+    if igreja_id:
+        nucleos = nucleos.filter(igreja_id=igreja_id)
+        
+    turmas = Turma.objects.none()
+    if nucleo_id:
+        turmas = Turma.objects.filter(nucleo_id=nucleo_id).order_by('-data_inicio')
+
+    contexto = {
+        'igrejas': igrejas, 
+        'nucleos': nucleos, 
+        'turmas': turmas,
+        'igreja_id': igreja_id, 
+        'nucleo_id': nucleo_id,
+        'turma_id': turma_id,
+        'aluno_nome': aluno_nome,
+    }
+
+    if turma_id:
+        try:
+            turma = get_object_or_404(Turma, id=turma_id)
+            data_inicio = turma.data_inicio
+            data_fim = turma.data_fim
+
+            frequencias = Frequencia.objects.filter(
+                aula__turma=turma,
+                aula__data__gte=data_inicio,
+                aula__data__lte=data_fim
+            ).select_related('matricula__aluno', 'aula')
+
+            if aluno_nome:
+                frequencias = frequencias.filter(matricula__aluno__nome__icontains=aluno_nome)
+
+            agrupado = {}
+            for f in frequencias:
+                mes_ano = f.aula.data.strftime('%Y-%m')
+                nome = f.matricula.aluno.nome
+                data_str = f.aula.data.strftime('%Y-%m-%d')
+                
+                if mes_ano not in agrupado:
+                    agrupado[mes_ano] = {}
+                if nome not in agrupado[mes_ano]:
+                    agrupado[mes_ano][nome] = {}
+                
+                agrupado[mes_ano][nome][data_str] = f.status
+
+            meses_pt = {'01': 'JAN', '02': 'FEV', '03': 'MAR', '04': 'ABR', '05': 'MAI', '06': 'JUN',
+                        '07': 'JUL', '08': 'AGO', '09': 'SET', '10': 'OUT', '11': 'NOV', '12': 'DEZ'}
+
+            blocos = []
+            for mes in sorted(agrupado.keys()):
+                aulas_mes = Aula.objects.filter(
+                    turma=turma, 
+                    data__year=int(mes.split('-')[0]), 
+                    data__month=int(mes.split('-')[1])
+                ).order_by('data')
+                dias_do_mes = [a.data.day for a in aulas_mes]
+
+                ano_mes = mes.split('-')
+                mes_formatado = f"{meses_pt[ano_mes[1]]}/{ano_mes[0]}"
+
+                alunos_do_mes = []
+                for nome in sorted(agrupado[mes].keys()):
+                    aluno_linha = {'nome': nome, 'dias': []}
+                    for dia in dias_do_mes:
+                        chave_data = f"{mes}-{dia:02d}"
+                        status = agrupado[mes][nome].get(chave_data)
+                        
+                        if status == 'presente':
+                            aluno_linha['dias'].append({'dia': dia, 'status': 'P', 'cor': 'text-green-600'})
+                        elif status == 'ausente':
+                            aluno_linha['dias'].append({'dia': dia, 'status': 'A', 'cor': 'text-red-600'})
+                        elif status == 'justificada':
+                            aluno_linha['dias'].append({'dia': dia, 'status': 'J', 'cor': 'text-black'})
+                        else:
+                            aluno_linha['dias'].append({'dia': dia, 'status': '-', 'cor': 'text-gray-400'})
+                    
+                    alunos_do_mes.append(aluno_linha)
+                
+                blocos.append({
+                    'mes_ano': mes_formatado,
+                    'dias': dias_do_mes,
+                    'alunos': alunos_do_mes
+                })
+
+            contexto.update({
+                'turma': turma,
+                'blocos': blocos, 
+                'gerado': True,
+                'data_ini_formatada': data_inicio.strftime('%d/%m/%Y'),
+                'data_fim_formatada': data_fim.strftime('%d/%m/%Y')
+            })
+        except Exception as e:
+            messages.error(request, f"Erro no relatÃ³rio: {e}")
+
+    if request.GET.get('export') == 'pdf' and contexto.get('gerado'):
+        return gerar_pdf_relatorio(contexto)
+
+    return render(request, 'consulta_frequencia.html', contexto)
+
+def gerar_pdf_relatorio(contexto):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="relatorio_{contexto["turma"].nome}.pdf"'
+    
+    page_width = landscape(A4)[0] - 60
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4), rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1)
+    sub_style = ParagraphStyle(name='SubStyle', parent=styles['Normal'], alignment=1)
+    
+    elements.append(Paragraph("Lista de PresenÃ§a - Extrato mensal", title_style))
+    elements.append(Paragraph(f"Turma: {contexto['turma'].nome} - {contexto['turma'].curso.nome}", sub_style))
+    elements.append(Paragraph(f"PerÃ­odo: {contexto['data_ini_formatada']} a {contexto['data_fim_formatada']}", sub_style))
+    elements.append(Spacer(1, 20))
+
+    for bloco in contexto['blocos']:
+        elements.append(Paragraph(f"MÃªs/Ano: {bloco['mes_ano']}", ParagraphStyle(name='MesStyle', parent=styles['Heading2'])))
+        elements.append(Spacer(1, 10))
+        
+        header = ["Aluno"] + [str(d) for d in bloco['dias']]
+        data = [header]
+        
+        for aluno in bloco['alunos']:
+            row = [aluno['nome']] + [d['status'] for d in aluno['dias']]
+            data.append(row)
+            
+        table = Table(data, repeatRows=1)
+        style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ])
+        
+        for r_idx, aluno in enumerate(bloco['alunos'], start=1):
+            for c_idx, dia in enumerate(aluno['dias'], start=1):
+                if dia['status'] == 'P':
+                    style.add('TEXTCOLOR', (c_idx, r_idx), (c_idx, r_idx), colors.green)
+                elif dia['status'] == 'A':
+                    style.add('TEXTCOLOR', (c_idx, r_idx), (c_idx, r_idx), colors.red)
+                elif dia['status'] == 'J':
+                    style.add('TEXTCOLOR', (c_idx, r_idx), (c_idx, r_idx), colors.black)
+                    
+        table.setStyle(style)
+        elements.append(table)
+        elements.append(Spacer(1, 30))
+    
+    doc.build(elements)
+    return response
+
+# --- IMPORTACAO FINANCEIRA ---
+def importar_planilha_financeira(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+    
+    turmas = Turma.objects.all().order_by('-data_inicio')
+
+    if request.method == 'POST':
+        turma_id = request.POST.get('turma')
+        arquivo = request.FILES.get('planilha')
+        
+        if not turma_id or not arquivo:
+            messages.error(request, "Selecione a turma e envie o arquivo CSV.")
+            return redirect('importar_planilha_financeira')
+
+        try:
+            turma = Turma.objects.get(id=turma_id)
+            data = arquivo.read().decode('utf-8-sig')
+            leitor = csv.reader(io.StringIO(data), delimiter=',')
+            linhas = list(leitor)
+            
+            if len(linhas) > 0 and "Nome" in linhas[0][0]:
+                linhas = linhas[1:]
+                
+            importados = 0
+            alunos_cancelados = 0
+            secao_atual = 'ativo'
+
+            for linha in linhas:
+                if not linha or len(linha) < 2: 
+                    continue
+                
+                linha_texto = " ".join(linha).upper()
+                
+                if "CANCELADO" in linha_texto:
+                    if "CLIENTE" in linha_texto:
+                        secao_atual = 'cancelado_cliente'
+                    elif "INADIMPLENTE" in linha_texto:
+                        secao_atual = 'cancelado_inadimplente'
+                    else:
+                        secao_atual = 'cancelado_generico'
+                    continue
+
+                email = ""
+                for celula in linha:
+                    if "@" in celula and "." in celula:
+                        email = celula.strip().lower()
+                        break
+                
+                if not email:
+                    continue
+
+                nome = linha[0].strip().upper() if len(linha) > 0 else "ALUNO SEM NOME"
+                telefone = linha[1].strip().replace(" ", "").replace("-", "") if len(linha) > 1 else ""
+
+                aluno, _ = Aluno.objects.get_or_create(
+                    email=email, 
+                    defaults={'nome': nome, 'telefone': telefone, 'data_inicio': datetime.today().date()}
+                )
+                
+                matricula, _ = Matricula.objects.get_or_create(
+                    aluno=aluno, turma=turma,
+                    defaults={'nucleo': turma.nucleo, 'curso': turma.curso}
+                )
+                
+                Mensalidade.objects.filter(matricula=matricula).delete()
+                status_geral = 'Em dia'
+                
+                if secao_atual.startswith('cancelado'):
+                    matricula.ativo = False
+                    if secao_atual == 'cancelado_inadimplente':
+                        status_geral = 'Inadimplente'
+                    alunos_cancelados += 1
+                else:
+                    matricula.ativo = True
+                    for i in range(4, len(linha)):
+                        valor = linha[i].strip().upper()
+                        if not valor: continue
+                        numero_mes = i - 3
+                        
+                        if 'PAGO' in valor:
+                            status = 'PAGO'
+                        elif 'INADIMPLENTE' in valor:
+                            status = 'INADIMPLENTE'
+                            status_geral = 'Inadimplente'
+                        else:
+                            continue
+                            
+                        data_status = None
+                        match = re.search(r'(\d{2}/\d{2}/\d{4})', valor)
+                        if match:
+                            try:
+                                data_status = datetime.strptime(match.group(1), '%d/%m/%Y').date()
+                            except ValueError:
+                                pass
+                        
+                        Mensalidade.objects.create(
+                            matricula=matricula,
+                            numero_mes=numero_mes,
+                            status=status,
+                            data_status=data_status
+                        )
+                    
+                    if not Mensalidade.objects.filter(matricula=matricula).exists():
+                        status_geral = 'Quitado'
+
+                matricula.status_pagamento = status_geral
+                matricula.save()
+                importados += 1
+
+            messages.success(request, f"{importados} alunos processados ({alunos_cancelados} desativados).")
+            return redirect('alunos_turma', turma_id=turma.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erro ao importar: {e}")
+            return redirect('importar_planilha_financeira')
+
+    return render(request, 'importar_financeiro.html', {'turmas': turmas})
+
+def api_mensalidades_aluno(request, matricula_id):
+    if not request.session.get('usuario_id'):
+        return JsonResponse({'error': 'Nao autorizado'}, status=401)
+        
+    try:
+        mensalidades = Mensalidade.objects.filter(
+            matricula_id=matricula_id, 
+            status='INADIMPLENTE'
+        ).order_by('numero_mes')
+        
+        dados = []
+        for m in mensalidades:
+            dados.append({
+                'mes': m.numero_mes,
+                'status': m.status,
+                'data': m.data_status.strftime('%d/%m/%Y') if m.data_status else 'Sem data'
+            })
+            
+        return JsonResponse({'mensalidades': dados})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+# --- RELATORIO DE FREQUENCIA DAS AULAS ---
+def relatorio_frequencia_aulas(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.churches.models import Igreja
+    from presentia.courses.models import Nucleo, Turma
+    from presentia.accounts.models import Aluno
+    from presentia.attendance.models import Matricula, Frequencia, Aula
+    
+    igrejas = Igreja.objects.all().order_by('nome')
+    
+    igreja_id = request.GET.get('igreja')
+    nucleo_id = request.GET.get('nucleo')
+    turma_id = request.GET.get('turma')
+    pagamento_filtro = request.GET.get('pagamento', 'todos')
+    
+    # Se nao houver igreja, apenas mostra os filtros
+    if not igreja_id:
+        return render(request, 'relatorio_frequencia_aulas.html', {'igrejas': igrejas, 'gerado': False})
+        
+    # Busca os nucleos da igreja
+    nucleos = Nucleo.objects.filter(igreja_id=igreja_id).order_by('nome')
+    
+    # Busca as turmas do nucleo ou da igreja
+    turmas = Turma.objects.none()
+    if nucleo_id:
+        turmas = Turma.objects.filter(nucleo_id=nucleo_id).order_by('-data_inicio')
+    else:
+        turmas = Turma.objects.filter(nucleo__igreja_id=igreja_id).order_by('-data_inicio')
+
+    # Define quais turmas serao processadas
+    if turma_id:
+        turmas_processar = Turma.objects.filter(id=turma_id)
+    elif nucleo_id:
+        turmas_processar = Turma.objects.filter(nucleo_id=nucleo_id)
+    else:
+        turmas_processar = Turma.objects.filter(nucleo__igreja_id=igreja_id)
+
+    # Agrupamento
+    dados_agrupados = {}
+    for turma in turmas_processar:
+        igreja_nome = turma.nucleo.igreja.nome
+        nucleo_nome = turma.nucleo.nome
+        
+        if igreja_nome not in dados_agrupados:
+            dados_agrupados[igreja_nome] = {}
+        if nucleo_nome not in dados_agrupados[igreja_nome]:
+            dados_agrupados[igreja_nome][nucleo_nome] = []
+            
+        total_aulas = Aula.objects.filter(turma=turma).count()
+        matriculas = Matricula.objects.filter(turma=turma).select_related('aluno').order_by('aluno__nome')
+        
+        alunos_dados = []
+        total_ativos = 0
+        total_desligados = 0
+        
+        for mat in matriculas:
+            # Filtro de pagamento
+            if pagamento_filtro != 'todos':
+                if pagamento_filtro == 'avista' and mat.status_pagamento != 'Quitado':
+                    continue
+                elif pagamento_filtro == 'adimplente' and mat.status_pagamento != 'Em dia':
+                    continue
+                elif pagamento_filtro == 'inadimplente' and mat.status_pagamento != 'Inadimplente':
+                    continue
+
+            if mat.ativo:
+                total_ativos += 1
+            else:
+                total_desligados += 1
+                
+            percentual = 0
+            if total_aulas > 0 and mat.ativo:
+                presencas = Frequencia.objects.filter(matricula=mat, status=Frequencia.Status.PRESENTE).count()
+                percentual = int((presencas / total_aulas) * 100)
+                
+            status_pgto = mat.status_pagamento
+            if status_pgto == 'Quitado':
+                status_pgto = 'Ã€ Vista'
+            elif status_pgto == 'Em dia':
+                status_pgto = 'Adimplente'
+                
+            alunos_dados.append({
+                'nome': mat.aluno.nome,
+                'ativo': mat.ativo,
+                'aproveitamento': percentual,
+                'status_pagamento': status_pgto,
+            })
+        
+        # So adiciona a turma se tiver alunos depois do filtro
+        if alunos_dados:
+            dados_agrupados[igreja_nome][nucleo_nome].append({
+                'nome': turma.nome,
+                'curso': turma.curso.nome,
+                'total_ativos': total_ativos,
+                'total_desligados': total_desligados,
+                'alunos': alunos_dados
+            })
+
+    # Verifica se o usuario clicou em "Exibir" ou "Gerar PDF"
+    exibir_dados = request.GET.get('exibir') == 'true' or request.GET.get('export') == 'pdf'
+    
+    contexto = {
+        'igrejas': igrejas,
+        'nucleos': nucleos,
+        'turmas': turmas,
+        'igreja_id': igreja_id,
+        'nucleo_id': nucleo_id,
+        'turma_id': turma_id,
+        'pagamento_filtro': pagamento_filtro,
+        'dados_agrupados': dados_agrupados if exibir_dados else {},
+        'gerado': exibir_dados
+    }
+
+    if request.GET.get('export') == 'pdf' and contexto.get('gerado'):
+        return gerar_pdf_relatorio_frequencia(contexto)
+
+    return render(request, 'relatorio_frequencia_aulas.html', contexto)
+
+
+def gerar_pdf_relatorio_frequencia(contexto):
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="relatorio_frequencia_aulas.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=portrait(A4), rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30)
+    elements = []
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1)
+    sub_style = ParagraphStyle(name='SubStyle', parent=styles['Normal'], alignment=1)
+    
+    elements.append(Paragraph("RelatÃ³rio de FrequÃªncia das Aulas", title_style))
+    elements.append(Paragraph("Presentia - Controle de FrequÃªncia", sub_style))
+    elements.append(Spacer(1, 20))
+
+    for igreja_nome, nucleos in contexto['dados_agrupados'].items():
+        elements.append(Paragraph(f"Igreja: {igreja_nome}", ParagraphStyle(name='IgrejaStyle', parent=styles['Heading2'])))
+        elements.append(Spacer(1, 10))
+        
+        for nucleo_nome, turmas in nucleos.items():
+            elements.append(Paragraph(f"NÃºcleo: {nucleo_nome}", ParagraphStyle(name='NucleoStyle', parent=styles['Heading3'])))
+            elements.append(Spacer(1, 10))
+            
+            for turma in turmas:
+                elements.append(Paragraph(f"Turma: {turma['nome']} ({turma['curso']}) - Ativos: {turma['total_ativos']} | Desligados: {turma['total_desligados']}", ParagraphStyle(name='TurmaStyle', parent=styles['Normal'])))
+                elements.append(Spacer(1, 5))
+                
+                # Tabela de Alunos
+                header = ["Aluno", "Aproveitamento", "Pagamento", "Status"]
+                data = [header]
+                
+                for aluno in turma['alunos']:
+                    status = "Ativo" if aluno['ativo'] else "Desligado"
+                    data.append([aluno['nome'], f"{aluno['aproveitamento']}%", aluno['status_pagamento'], status])
+                    
+                table = Table(data, colWidths=[250, 80, 80, 60])
+                style = TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                    ('ALIGN', (1, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 9),
+                    ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                    ('BACKGROUND', (0, 1), (-1, -1), colors.white),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ])
+                
+                # Colorir aproveitamento
+                for r_idx, aluno in enumerate(turma['alunos'], start=1):
+                    if aluno['aproveitamento'] >= 75:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.green)
+                    elif aluno['aproveitamento'] >= 50:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.orange)
+                    else:
+                        style.add('TEXTCOLOR', (1, r_idx), (1, r_idx), colors.red)
+                        
+                    # Colorir status
+                    if aluno['status_pagamento'] == 'Inadimplente':
+                        style.add('TEXTCOLOR', (2, r_idx), (2, r_idx), colors.red)
+                        
+                table.setStyle(style)
+                elements.append(table)
+                elements.append(Spacer(1, 20))
+    
+    doc.build(elements)
+    return response
+
+--- presentia\churches\views.py ---
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django import forms
+from .models import Igreja
+
+class IgrejaForm(forms.ModelForm):
+    nome = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    cidade = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    endereco = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+
+    class Meta:
+        model = Igreja
+        fields = ['nome', 'cidade', 'endereco']
+
+def lista_igrejas(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    igrejas = Igreja.objects.all().order_by('nome')
+    return render(request, 'igrejas_lista.html', {'igrejas': igrejas})
+
+def nova_igreja(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = IgrejaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Igreja cadastrada com sucesso!")
+            return redirect('igrejas_lista')
+    else:
+        form = IgrejaForm()
+    return render(request, 'igreja_form.html', {'form': form})
+
+
+
+
+from django.shortcuts import get_object_or_404
+from presentia.courses.models import Nucleo
+
+def editar_igreja(request, igreja_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    igreja = get_object_or_404(Igreja, id=igreja_id)
+    
+    if request.method == 'POST':
+        form = IgrejaForm(request.POST, instance=igreja)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Igreja atualizada com sucesso!")
+            return redirect('igrejas_lista')
+    else:
+        form = IgrejaForm(instance=igreja)
+        
+    return render(request, 'igreja_form.html', {'form': form, 'igreja': igreja})
+
+def excluir_igreja(request, igreja_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    igreja = get_object_or_404(Igreja, id=igreja_id)
+    
+    # Regra de Negocio: Nao permitir excluir se tiver nucleos vinculados
+    if Nucleo.objects.filter(igreja=igreja).exists():
+        messages.error(request, "Não é possível excluir esta igreja, pois ela possui núcleos vinculados.")
+        return redirect('igrejas_lista')
+        
+    if request.method == 'POST':
+        nome = igreja.nome
+        igreja.delete()
+        messages.success(request, f"Igreja {nome} excluída com sucesso!")
+        return redirect('igrejas_lista')
+        
+    return render(request, 'confirmar_exclusao_igreja.html', {'igreja': igreja})
+
+--- presentia\courses\views.py ---
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django import forms
+from django.db.models import Count
+from .models import Curso, Nucleo
+from presentia.churches.models import Igreja
+from presentia.attendance.models import Matricula
+
+class NucleoForm(forms.ModelForm):
+    nome = forms.CharField(widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    igreja = forms.ModelChoiceField(queryset=Igreja.objects.all(), widget=forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+
+    class Meta:
+        model = Nucleo
+        fields = ['nome', 'igreja']
+
+def lista_nucleos(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+        
+    from django.db import connection
+    from presentia.churches.models import Igreja
+    
+    # Pega todas as igrejas para o filtro
+    igrejas = Igreja.objects.all().order_by('nome')
+    
+    # Pega o filtro da URL
+    igreja_filtro = request.GET.get('igreja')
+    
+    query = '''
+        SELECT n.id, n.nome, i.id as igreja_id, i.nome AS igreja_nome, i.cidade,
+               (SELECT COUNT(*) FROM tb_matriculas m WHERE m.nucleo_id = n.id) AS total_alunos,
+               (SELECT COUNT(*) FROM tb_turmas t WHERE t.nucleo_id = n.id) AS total_turmas
+        FROM tb_nucleos n
+        JOIN tb_igrejas i ON i.id = n.igreja_id
+    '''
+    params = []
+    
+    if igreja_filtro:
+        query += " WHERE i.id = %s::uuid"
+        params.append(igreja_filtro)
+        
+    query += " ORDER BY n.nome"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+
+    nucleos = []
+    for row in rows:
+        nucleos.append({
+            'id': row[0],
+            'nome': row[1],
+            'igreja_nome': row[3],
+            'cidade': row[4],
+            'total_alunos': row[5],
+            'total_turmas': row[6],
+        })
+
+    return render(request, 'nucleos_lista.html', {
+        'nucleos': nucleos, 
+        'igrejas': igrejas,
+        'igreja_filtro': igreja_filtro
+    })
+
+
+def novo_nucleo(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = NucleoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Núcleo cadastrado com sucesso!")
+            return redirect('nucleos_lista')
+    else:
+        form = NucleoForm()
+    return render(request, 'nucleo_form.html', {'form': form})
+
+
+
+
+from django import forms
+from presentia.courses.models import Turma
+
+class TurmaForm(forms.ModelForm):
+    nome = forms.CharField(max_length=100, widget=forms.TextInput(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    nucleo = forms.ModelChoiceField(queryset=Nucleo.objects.all(), widget=forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    curso = forms.ModelChoiceField(queryset=Curso.objects.all().order_by('ordem'), widget=forms.Select(attrs={'class': 'w-full px-4 py-2 border rounded-lg'}))
+    
+    # Adiciona o formato '%Y-%m-%d' para o Django entender a data no HTML
+    data_inicio = forms.DateField(
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'type': 'date'}
+        ), 
+        input_formats=['%Y-%m-%d']
+    )
+    data_fim = forms.DateField(
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
+            attrs={'class': 'w-full px-4 py-2 border rounded-lg', 'type': 'date'}
+        ),
+        input_formats=['%Y-%m-%d']
+    )
+
+    class Meta:
+        model = Turma
+        fields = ['nome', 'nucleo', 'curso', 'data_inicio', 'data_fim']
+
+class Meta:
+        model = Turma
+        fields = ['nome', 'nucleo', 'curso', 'data_inicio', 'data_fim']
+
+def lista_turmas(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    from presentia.courses.models import Nucleo
+    
+    # Busca todos os nucleos
+    nucleos = Nucleo.objects.all().order_by('nome')
+    
+    # Se nao houver filtro na URL, pega o primeiro nucleo
+    nucleo_filtro = request.GET.get('nucleo')
+    if not nucleo_filtro and nucleos.exists():
+        nucleo_filtro = str(nucleos.first().id)
+    
+    # Busca as turmas aplicando o filtro
+    turmas = Turma.objects.all().select_related('nucleo', 'curso').order_by('-data_inicio')
+    if nucleo_filtro:
+        turmas = turmas.filter(nucleo_id=nucleo_filtro)
+        
+    return render(request, 'turmas_lista.html', {
+        'turmas': turmas, 
+        'nucleos': nucleos,
+        'nucleo_filtro': nucleo_filtro
+    })
+
+
+def nova_turma(request):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    if request.method == 'POST':
+        form = TurmaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Turma cadastrada com sucesso!")
+            return redirect('turmas_lista')
+    else:
+        form = TurmaForm()
+    return render(request, 'turma_form.html', {'form': form})
+
+
+# --- EDICAO E EXCLUSAO DE TURMA ---
+def editar_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    if request.method == 'POST':
+        form = TurmaForm(request.POST, instance=turma)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Turma atualizada com sucesso!")
+            return redirect('turmas_lista')
+    else:
+        form = TurmaForm(instance=turma)
+        
+    return render(request, 'turma_form.html', {'form': form, 'turma': turma})
+
+def excluir_turma(request, turma_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    turma = get_object_or_404(Turma, id=turma_id)
+    
+    # Regra de Negocio: Nao permitir excluir se tiver alunos
+    from presentia.attendance.models import Matricula
+    if Matricula.objects.filter(turma=turma).exists():
+        messages.error(request, "Não é possível excluir esta turma, pois ela possui alunos matriculados.")
+        return redirect('turmas_lista')
+    
+    if request.method == 'POST':
+        nome = turma.nome
+        turma.delete()
+        messages.success(request, f"Turma {nome} excluída com sucesso!")
+        return redirect('turmas_lista')
+        
+    return render(request, 'confirmar_exclusao_turma.html', {'turma': turma})
+
+
+from django.http import JsonResponse
+
+def api_contar_turmas(request, nucleo_id):
+    from django.db import connection
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) FROM tb_turmas WHERE nucleo_id = %s::uuid", [str(nucleo_id)])
+        total = cursor.fetchone()[0]
+    return JsonResponse({'total': total})
+
+===== 9. URLS =====
+
+--- config\urls.py ---
+from django.urls import path
+from presentia.accounts.views import (
+    login_view, logout_view, SolicitacaoAcessoView, 
+    alunos_nucleo, novo_aluno_nucleo, novo_aluno_experimental, editar_aluno,
+    gerenciar_solicitacoes, aprovar_solicitacao, recusar_solicitacao,
+    gerenciar_usuarios, novo_usuario, resetar_senha, alternar_admin, excluir_usuario, editar_usuario,
+    alunos_turma, novo_aluno_turma, novo_aluno_experimental_turma, 
+    frequencia_turma, copiar_alunos_turma, processar_copia_alunos,
+    alternar_status_aluno, selecionar_turma_chamada
+)
+from presentia.churches.views import lista_igrejas, nova_igreja, editar_igreja, excluir_igreja
+from presentia.courses.views import (
+    lista_nucleos, novo_nucleo, lista_turmas, nova_turma, 
+    editar_turma, excluir_turma, api_contar_turmas
+)
+from presentia.attendance.views import (
+    dashboard_view, chamada_nucleo, lista_frequencia, consulta_frequencia,
+    importar_planilha_financeira, api_mensalidades_aluno,
+    relatorio_frequencia_aulas
+)
+
+urlpatterns = [
+    path('', login_view, name='login'),
+    path('logout/', logout_view, name='logout'),
+    path('solicitar-acesso/', SolicitacaoAcessoView.as_view(), name='solicitar_acesso'),
+    
+    path('dashboard/', dashboard_view, name='dashboard'),
+    
+    # Igrejas
+    path('igrejas/', lista_igrejas, name='igrejas_lista'),
+    path('igrejas/nova/', nova_igreja, name='igreja_nova'),
+    path('igrejas/<uuid:igreja_id>/editar/', editar_igreja, name='editar_igreja'),
+    path('igrejas/<uuid:igreja_id>/excluir/', excluir_igreja, name='excluir_igreja'),
+    
+    # Nucleos
+    path('nucleos/', lista_nucleos, name='nucleos_lista'),
+    path('nucleos/novo/', novo_nucleo, name='nucleo_novo'),
+    path('nucleos/<uuid:nucleo_id>/alunos/', alunos_nucleo, name='alunos_nucleo'),
+    path('nucleos/<uuid:nucleo_id>/alunos/novo/', novo_aluno_nucleo, name='novo_aluno_nucleo'),
+    path('nucleos/<uuid:nucleo_id>/experimental/', novo_aluno_experimental, name='novo_aluno_experimental'),
+    path('api/nucleos/<uuid:nucleo_id>/turmas/', api_contar_turmas, name='api_contar_turmas'),
+    
+    # Turmas
+    path('turmas/', lista_turmas, name='turmas_lista'),
+    path('turmas/nova/', nova_turma, name='turma_nova'),
+    path('turmas/<uuid:turma_id>/editar/', editar_turma, name='editar_turma'),
+    path('turmas/<uuid:turma_id>/excluir/', excluir_turma, name='excluir_turma'),
+    path('turmas/<uuid:turma_id>/alunos/', alunos_turma, name='alunos_turma'),
+    path('turmas/<uuid:turma_id>/alunos/novo/', novo_aluno_turma, name='novo_aluno_turma'),
+    path('turmas/<uuid:turma_id>/experimental/', novo_aluno_experimental_turma, name='novo_aluno_experimental_turma'),
+    path('turmas/<uuid:turma_id>/frequencia/', frequencia_turma, name='frequencia_turma'),
+    path('turmas/<uuid:turma_id>/copiar/', copiar_alunos_turma, name='copiar_alunos_turma'),
+    path('turmas/<uuid:turma_id>/copiar/processar/', processar_copia_alunos, name='processar_copia_alunos'),
+    
+    # Chamada
+    path('chamada/', selecionar_turma_chamada, name='selecionar_turma_chamada'),
+    path('nucleos/<uuid:nucleo_id>/chamada/', chamada_nucleo, name='chamada_nucleo'),
+    
+    # Alunos
+    path('alunos/<int:aluno_id>/editar/', editar_aluno, name='editar_aluno'),
+    path('matriculas/<uuid:matricula_id>/status/', alternar_status_aluno, name='alternar_status_aluno'),
+    
+    # Solicitacoes e Usuarios
+    path('solicitacoes/', gerenciar_solicitacoes, name='gerenciar_solicitacoes'),
+    path('solicitacoes/<int:solicitacao_id>/aprovar/', aprovar_solicitacao, name='aprovar_solicitacao'),
+    path('solicitacoes/<int:solicitacao_id>/recusar/', recusar_solicitacao, name='recusar_solicitacao'),
+    path('usuarios/', gerenciar_usuarios, name='gerenciar_usuarios'),
+    path('usuarios/novo/', novo_usuario, name='novo_usuario'),
+    path('usuarios/<int:usuario_id>/editar/', editar_usuario, name='editar_usuario'),
+    path('usuarios/<int:usuario_id>/resetar-senha/', resetar_senha, name='resetar_senha'),
+    path('usuarios/<int:usuario_id>/alternar-admin/', alternar_admin, name='alternar_admin'),
+    path('usuarios/<int:usuario_id>/excluir/', excluir_usuario, name='excluir_usuario'),
+    
+    # Financeiro
+    path('financeiro/importar/', importar_planilha_financeira, name='importar_planilha_financeira'),
+    path('api/mensalidades/<uuid:matricula_id>/', api_mensalidades_aluno, name='api_mensalidades_aluno'),
+    
+    # Frequencia e Relatorios
+    path('frequencia/', lista_frequencia, name='frequencia_lista'),
+    path('frequencia/consultas/', consulta_frequencia, name='consulta_frequencia'),
+    path('frequencia/relatorio-aulas/', relatorio_frequencia_aulas, name='relatorio_frequencia_aulas'),
+]
+
+===== 10. TESTES EXISTENTES =====
+presentia\accounts\tests.py
+presentia\attendance\tests.py
+presentia\churches\tests.py
+presentia\courses\tests.py
+
+===== 11. .env (VARIAVEIS, SEM SEGREDOS) =====
+DJANGO_SETTINGS_MODULE=config.settings.local
+PRESENTIA_SECRET_KEY=***REDACTED***
+PRESENTIA_DEBUG=True
+PRESENTIA_ALLOWED_HOSTS=localhost,127.0.0.1
+PRESENTIA_LANGUAGE_CODE=pt-br
+PRESENTIA_TIME_ZONE=America/Sao_Paulo
+PRESENTIA_DATABASE_URL=postgres://presentia_user:abc%4012345@localhost:5432/presentia
+PRESENTIA_SECURE_SSL_REDIRECT=False
+PRESENTIA_SESSION_COOKIE_SECURE=False
+PRESENTIA_CSRF_COOKIE_SECURE=False
+PRESENTIA_EMAIL_HOST=smtp.fvc.edu.br
+PRESENTIA_EMAIL_PORT=587
+PRESENTIA_EMAIL_HOST_USER=presenca@fvc.edu.br
+PRESENTIA_EMAIL_HOST_PASSWORD=***REDACTED***
+PRESENTIA_EMAIL_USE_TLS=True
+PRESENTIA_DEFAULT_FROM_EMAIL=Presentia <presenca@fvc.edu.br>
+
+===== FIM =====
