@@ -2,6 +2,7 @@
 import uuid
 from presentia.courses.models import Aula, Nucleo, Curso, Turma
 from presentia.accounts.models import Aluno
+from django.utils import timezone
 
 class Matricula(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -52,7 +53,7 @@ class AlunoExperimental(models.Model):
     id = models.AutoField(primary_key=True)
     nome_completo = models.CharField(max_length=150)
     celular = models.CharField(max_length=11, unique=True)
-    data_visita = models.DateTimeField(auto_now_add=True)
+    data_visita = models.DateTimeField(default=timezone.now)
     nucleo = models.ForeignKey(Nucleo, on_delete=models.CASCADE, related_name="experimentais")
     curso = models.ForeignKey(Curso, on_delete=models.PROTECT, related_name="experimentais", null=True, blank=True)
 
