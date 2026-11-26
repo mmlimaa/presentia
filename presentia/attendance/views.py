@@ -669,3 +669,42 @@ def gerar_pdf_relatorio_frequencia(contexto):
     
     doc.build(elements)
     return response
+
+# --- ADMINISTRACAO DE ALUNOS EXPERIMENTAIS ---
+def lista_alunos_experimentais(request):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        messages.error(request, "Acesso negado.")
+        return redirect('dashboard')
+
+    # Captura os filtros
+    igreja_id = request.GET.get('igreja')
+    turma_id = request.GET.get('turma')
+
+    igrejas = Igreja.objects.all().order_by('nome')
+    
+    # Filtra as turmas baseado na igreja selecionada
+    turmas = Turma.objects.none()
+    if igreja_id:
+        turmas = Turma.objects.filter(nucleo__igreja_id=igreja_id).select_related('nucleo', 'curso').order_by('-data_inicio')
+        
+    if not turma_id and turmas.exists():
+        turma_id = str(turmas.first().id)
+
+    alunos_experimentais = AlunoExperimental.objects.none()
+    
+    if turma_id:
+        turma = get_object_or_404(Turma, id=turma_id)
+        alunos_experimentais = AlunoExperimental.objects.filter(
+            nucleo=turma.nucleo, 
+            curso=turma.curso
+        ).order_by('-data_visita')
+
+    contexto = {
+        'igrejas': igrejas,
+        'turmas': turmas,
+        'alunos_experimentais': alunos_experimentais,
+        'igreja_id': igreja_id,
+        'turma_id': turma_id,
+    }
+    
+    return render(request, 'admin_alunos_experimentais.html', contexto)
