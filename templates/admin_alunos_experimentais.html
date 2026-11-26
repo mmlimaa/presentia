@@ -1,0 +1,71 @@
+﻿{% extends "base.html" %}
+{% block title %}Alunos Experimentais{% endblock %}
+
+{% block content_logado %}
+<div class="w-full">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-800">Gestão de Alunos Experimentais</h2>
+            <p class="text-gray-500 text-sm">Gerencie os contatos captados nas aulas experimentais.</p>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <form method="GET" class="mb-4 flex gap-4 items-center">
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600 font-medium">Igreja:</label>
+            <select name="igreja" onchange="this.form.submit()" class="w-64 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500">
+                <option value="">Todas as Igrejas</option>
+                {% for i in igrejas %}
+                    <option value="{{ i.id }}" {% if igreja_id == i.id|stringformat:"s" %}selected{% endif %}>{{ i.nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        {% if igreja_id %}
+        <div class="flex items-center gap-2">
+            <label class="text-sm text-gray-600 font-medium">Turma:</label>
+            <select name="turma" onchange="this.form.submit()" class="w-64 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-blue-500">
+                {% for t in turmas %}
+                    <option value="{{ t.id }}" {% if turma_id == t.id|stringformat:"s" %}selected{% endif %}>{{ t.nome }} ({{ t.curso.nome }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+    </form>
+
+    <!-- Tabela -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        {% if turma_id %}
+        <table class="w-full text-left border-collapse">
+            <thead>
+                <tr class="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider border-b border-gray-200">
+                    <th class="px-6 py-4 font-semibold">Nome Completo</th>
+                    <th class="px-6 py-4 font-semibold">Telefone</th>
+                    <th class="px-6 py-4 font-semibold">Data da Aula</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700 text-sm">
+                {% for aluno in alunos_experimentais %}
+                <tr class="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 font-medium uppercase">{{ aluno.nome_completo }}</td>
+                    <td class="px-6 py-4">{{ aluno.celular }}</td>
+                    <td class="px-6 py-4">{{ aluno.data_visita|date:"d/m/Y" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="px-6 py-12 text-center text-gray-500">
+                        Nenhum aluno experimental cadastrado para esta turma.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="p-12 text-center text-gray-500">
+            Selecione uma igreja e turma para visualizar os alunos experimentais.
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
