@@ -485,8 +485,6 @@ def novo_aluno_experimental_turma(request, turma_id):
         return redirect('login')
     
     turma = get_object_or_404(Turma, id=turma_id)
-    
-    # Pega os dados do GET (quando clica no botão) ou do POST (quando salva)
     origem = request.GET.get('origem') or request.POST.get('origem')
     data_str = request.GET.get('data') or request.POST.get('data')
     
@@ -496,15 +494,22 @@ def novo_aluno_experimental_turma(request, turma_id):
             aluno = form.save(commit=False)
             aluno.nucleo = turma.nucleo
             aluno.curso = turma.curso
+            
+            # NOVO: Força a data de visita para a data selecionada na tela
+            if data_str:
+                from datetime import datetime
+                try:
+                    aluno.data_visita = datetime.strptime(data_str, '%Y-%m-%d')
+                except ValueError:
+                    pass # Se der erro na data, ignora e deixa o auto_now_add
+                    
             aluno.save()
             messages.success(request, f"Aula experimental registrada com sucesso na turma {turma.nome}!")
             
-            # SE VEIO DA FREQUÊNCIA, VOLTA PARA LÁ
             if origem == 'frequencia':
                 data_hoje = data_str if data_str else __import__('datetime').date.today().strftime('%Y-%m-%d')
                 return redirect(f"/turmas/{turma.id}/frequencia/?data={data_hoje}")
                 
-            # SENÃO, VAI PARA O CADASTRO DE ALUNOS (padrão)
             return redirect('alunos_turma', turma_id=turma.id)
     else:
         form = AlunoExperimentalForm()
