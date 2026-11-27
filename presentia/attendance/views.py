@@ -44,8 +44,9 @@ def lista_frequencia(request):
     if not request.session.get('usuario_id'):
         return redirect('login')
     
+    from django.db.models import Count
     from presentia.churches.models import Igreja
-    from presentia.courses.models import Nucleo
+    from presentia.courses.models import Nucleo, Turma
     
     igreja_id = request.GET.get('igreja')
     nucleo_id = request.GET.get('nucleo')
@@ -59,45 +60,27 @@ def lista_frequencia(request):
     turmas_dados = []
     
     if nucleo_id:
-        from django.db import connection
-        with connection.cursor() as cursor:
-            cursor.execute('''
-                SELECT t.id, t.nome, t.data_inicio, t.data_fim, c.nome as curso_nome
-                FROM tb_turmas t
-                JOIN tb_cursos c ON c.id = t.curso_id
-                WHERE t.nucleo_id = %s::uuid
-                ORDER BY t.data_inicio DESC
-            ''', [nucleo_id])
-            rows = cursor.fetchall()
+        # O ORM faz os JOINs e COUNTs (ativos, inativos, experimentais) de forma otimizada
+        turmas = Turma.objects.filter(nucleo_id=nucleo_id).select_related('curso').annotate(
+            ativos=Count('matriculas', filter=models.Q(matriculas__ativo=True), distinct=True),
+            inativos=Count('matriculas', filter=models.Q(matriculas__ativo=False), distinct=True)
+        ).order_by('-data_inicio')
+        
+        for turma in turmas:
+            # Conta os experimentais no mesmo nucleo e curso da turma
+            experimentais = AlunoExperimental.objects.filter(
+                nucleo_id=turma.nucleo_id, 
+                curso_id=turma.curso_id
+            ).count()
             
-        for row in rows:
-            turma_id = str(row[0])
-            turma_nome = row[1]
-            data_inicio = row[2]
-            data_fim = row[3]
-            curso_nome = row[4]
-            
-            with connection.cursor() as cursor:
-                cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = true", [turma_id])
-                ativos = cursor.fetchone()[0]
-                
-                cursor.execute("SELECT COUNT(*) FROM tb_matriculas WHERE turma_id = %s::uuid AND ativo = false", [turma_id])
-                inativos = cursor.fetchone()[0]
-                
-                cursor.execute("SELECT nucleo_id, curso_id FROM tb_turmas WHERE id = %s::uuid", [turma_id])
-                turma_nucleo_id, turma_curso_id = cursor.fetchone()
-                
-                cursor.execute("SELECT COUNT(*) FROM tb_alunos_experimentais WHERE nucleo_id = %s::uuid AND curso_id = %s::uuid", [str(turma_nucleo_id), str(turma_curso_id)])
-                experimentais = cursor.fetchone()[0]
-                
             turmas_dados.append({
-                'id': turma_id,
-                'nome': turma_nome,
-                'curso': curso_nome,
-                'data_inicio': data_inicio,
-                'data_fim': data_fim,
-                'ativos': ativos,
-                'inativos': inativos,
+                'id': turma.id,
+                'nome': turma.nome,
+                'curso': turma.curso.nome,
+                'data_inicio': turma.data_inicio,
+                'data_fim': turma.data_fim,
+                'ativos': turma.ativos,
+                'inativos': turma.inativos,
                 'experimentais': experimentais
             })
             
@@ -108,7 +91,6 @@ def lista_frequencia(request):
         'igreja_id': igreja_id,
         'nucleo_id': nucleo_id
     })
-
 def chamada_nucleo(request, nucleo_id):
     if not request.session.get('usuario_id'):
         return redirect('login')
