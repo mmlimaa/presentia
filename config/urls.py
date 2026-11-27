@@ -1,4 +1,4 @@
-from django.urls import path
+﻿from django.urls import path
 from presentia.accounts.views import (
     login_view, logout_view, SolicitacaoAcessoView, 
     alunos_nucleo, novo_aluno_nucleo, novo_aluno_experimental, editar_aluno,
@@ -16,7 +16,7 @@ from presentia.courses.views import (
 from presentia.attendance.views import (
     dashboard_view, chamada_nucleo, lista_frequencia, consulta_frequencia,
     importar_planilha_financeira, api_mensalidades_aluno,
-    relatorio_frequencia_aulas, lista_alunos_experimentais
+    relatorio_frequencia_aulas, lista_alunos_experimentais, editar_aluno_experimental, excluir_aluno_experimental
 )
 
 urlpatterns = [
@@ -81,5 +81,7 @@ urlpatterns = [
     path('frequencia/relatorio-aulas/', relatorio_frequencia_aulas, name='relatorio_frequencia_aulas'),
     
     # Alunos Experimentais
-    path('admin/alunos-experimentais/', lista_alunos_experimentais, name='lista_alunos_experimentais'),
+        path('admin/alunos-experimentais/', lista_alunos_experimentais, name='lista_alunos_experimentais'),
+    path('admin/alunos-experimentais/<int:aluno_id>/editar/', editar_aluno_experimental, name='editar_aluno_experimental'),
+    path('admin/alunos-experimentais/<int:aluno_id>/excluir/', excluir_aluno_experimental, name='excluir_aluno_experimental'),
 ]

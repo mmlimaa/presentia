@@ -274,7 +274,7 @@ def consulta_frequencia(request):
                 'data_fim_formatada': data_fim.strftime('%d/%m/%Y')
             })
         except Exception as e:
-            messages.error(request, f"Erro no relatório: {e}")
+            messages.error(request, f"Erro no relatÃ³rio: {e}")
 
     if request.GET.get('export') == 'pdf' and contexto.get('gerado'):
         return gerar_pdf_relatorio(contexto)
@@ -293,13 +293,13 @@ def gerar_pdf_relatorio(contexto):
     title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1)
     sub_style = ParagraphStyle(name='SubStyle', parent=styles['Normal'], alignment=1)
     
-    elements.append(Paragraph("Lista de Presença - Extrato mensal", title_style))
+    elements.append(Paragraph("Lista de PresenÃ§a - Extrato mensal", title_style))
     elements.append(Paragraph(f"Turma: {contexto['turma'].nome} - {contexto['turma'].curso.nome}", sub_style))
-    elements.append(Paragraph(f"Período: {contexto['data_ini_formatada']} a {contexto['data_fim_formatada']}", sub_style))
+    elements.append(Paragraph(f"PerÃ­odo: {contexto['data_ini_formatada']} a {contexto['data_fim_formatada']}", sub_style))
     elements.append(Spacer(1, 20))
 
     for bloco in contexto['blocos']:
-        elements.append(Paragraph(f"Mês/Ano: {bloco['mes_ano']}", ParagraphStyle(name='MesStyle', parent=styles['Heading2'])))
+        elements.append(Paragraph(f"MÃªs/Ano: {bloco['mes_ano']}", ParagraphStyle(name='MesStyle', parent=styles['Heading2'])))
         elements.append(Spacer(1, 10))
         
         header = ["Aluno"] + [str(d) for d in bloco['dias']]
@@ -559,7 +559,7 @@ def relatorio_frequencia_aulas(request):
                 
             status_pgto = mat.status_pagamento
             if status_pgto == 'Quitado':
-                status_pgto = 'À Vista'
+                status_pgto = 'Ã€ Vista'
             elif status_pgto == 'Em dia':
                 status_pgto = 'Adimplente'
                 
@@ -612,8 +612,8 @@ def gerar_pdf_relatorio_frequencia(contexto):
     title_style = ParagraphStyle(name='TitleStyle', parent=styles['Heading1'], alignment=1)
     sub_style = ParagraphStyle(name='SubStyle', parent=styles['Normal'], alignment=1)
     
-    elements.append(Paragraph("Relatório de Frequência das Aulas", title_style))
-    elements.append(Paragraph("Presentia - Controle de Frequência", sub_style))
+    elements.append(Paragraph("RelatÃ³rio de FrequÃªncia das Aulas", title_style))
+    elements.append(Paragraph("Presentia - Controle de FrequÃªncia", sub_style))
     elements.append(Spacer(1, 20))
 
     for igreja_nome, nucleos in contexto['dados_agrupados'].items():
@@ -621,7 +621,7 @@ def gerar_pdf_relatorio_frequencia(contexto):
         elements.append(Spacer(1, 10))
         
         for nucleo_nome, turmas in nucleos.items():
-            elements.append(Paragraph(f"Núcleo: {nucleo_nome}", ParagraphStyle(name='NucleoStyle', parent=styles['Heading3'])))
+            elements.append(Paragraph(f"NÃºcleo: {nucleo_nome}", ParagraphStyle(name='NucleoStyle', parent=styles['Heading3'])))
             elements.append(Spacer(1, 10))
             
             for turma in turmas:
@@ -708,3 +708,40 @@ def lista_alunos_experimentais(request):
     }
     
     return render(request, 'admin_alunos_experimentais.html', contexto)
+
+# --- EDICAO E EXCLUSAO DE ALUNO EXPERIMENTAL ---
+from presentia.accounts.views import AlunoExperimentalForm
+
+def editar_aluno_experimental(request, aluno_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    aluno = get_object_or_404(AlunoExperimental, id=aluno_id)
+    turma_id = request.GET.get('turma')
+    
+    if request.method == 'POST':
+        # Reutiliza o form de aluno experimental, mas precisamos passar a instância
+        form = AlunoExperimentalForm(request.POST, instance=aluno)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Aluno experimental atualizado com sucesso!")
+            return redirect(f"/admin/alunos-experimentais/?turma={turma_id}")
+    else:
+        form = AlunoExperimentalForm(instance=aluno)
+        
+    return render(request, 'experimental_editar.html', {'form': form, 'aluno': aluno, 'turma_id': turma_id})
+
+def excluir_aluno_experimental(request, aluno_id):
+    if not request.session.get('usuario_id') or not request.session.get('usuario_is_admin'):
+        return redirect('login')
+        
+    aluno = get_object_or_404(AlunoExperimental, id=aluno_id)
+    turma_id = request.GET.get('turma')
+    
+    if request.method == 'POST':
+        nome = aluno.nome_completo
+        aluno.delete()
+        messages.success(request, f"Aluno experimental {nome} excluído com sucesso!")
+        return redirect(f"/admin/alunos-experimentais/?turma={turma_id}")
+        
+    return render(request, 'experimental_excluir.html', {'aluno': aluno, 'turma_id': turma_id})
