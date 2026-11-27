@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django import forms
 from django.db.models import Count
@@ -27,35 +27,16 @@ def lista_nucleos(request):
     # Pega o filtro da URL
     igreja_filtro = request.GET.get('igreja')
     
-    query = '''
-        SELECT n.id, n.nome, i.id as igreja_id, i.nome AS igreja_nome, i.cidade,
-               (SELECT COUNT(*) FROM tb_matriculas m WHERE m.nucleo_id = n.id) AS total_alunos,
-               (SELECT COUNT(*) FROM tb_turmas t WHERE t.nucleo_id = n.id) AS total_turmas
-        FROM tb_nucleos n
-        JOIN tb_igrejas i ON i.id = n.igreja_id
-    '''
-    params = []
+        # O Django ORM faz os JOINs e COUNTs de forma otimizada
+    nucleos = Nucleo.objects.select_related('igreja').annotate(
+        total_alunos=Count('matriculas', distinct=True),
+        total_turmas=Count('turmas', distinct=True)
+    )
     
     if igreja_filtro:
-        query += " WHERE i.id = %s::uuid"
-        params.append(igreja_filtro)
+        nucleos = nucleos.filter(igreja_id=igreja_filtro)
         
-    query += " ORDER BY n.nome"
-    
-    with connection.cursor() as cursor:
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
-
-    nucleos = []
-    for row in rows:
-        nucleos.append({
-            'id': row[0],
-            'nome': row[1],
-            'igreja_nome': row[3],
-            'cidade': row[4],
-            'total_alunos': row[5],
-            'total_turmas': row[6],
-        })
+    nucleos = nucleos.order_by('nome')
 
     return render(request, 'nucleos_lista.html', {
         'nucleos': nucleos, 
@@ -201,3 +182,41 @@ def api_contar_turmas(request, nucleo_id):
         cursor.execute("SELECT COUNT(*) FROM tb_turmas WHERE nucleo_id = %s::uuid", [str(nucleo_id)])
         total = cursor.fetchone()[0]
     return JsonResponse({'total': total})
+
+# --- EDICAO E EXCLUSAO DE NUCLEO ---
+def editar_nucleo(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    
+    if request.method == 'POST':
+        form = NucleoForm(request.POST, instance=nucleo)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Núcleo atualizado com sucesso!")
+            return redirect('nucleos_lista')
+    else:
+        form = NucleoForm(instance=nucleo)
+        
+    return render(request, 'nucleo_form.html', {'form': form, 'nucleo': nucleo})
+
+def excluir_nucleo(request, nucleo_id):
+    if not request.session.get('usuario_id'):
+        return redirect('login')
+    
+    nucleo = get_object_or_404(Nucleo, id=nucleo_id)
+    
+    # Regra de Negocio: Nao permitir excluir se tiver alunos ou turmas
+    from presentia.attendance.models import Matricula
+    if Matricula.objects.filter(nucleo=nucleo).exists() or nucleo.turmas.exists():
+        messages.error(request, "Não é possível excluir este núcleo, pois ele possui turmas ou alunos vinculados.")
+        return redirect('nucleos_lista')
+        
+    if request.method == 'POST':
+        nome = nucleo.nome
+        nucleo.delete()
+        messages.success(request, f"Núcleo {nome} excluído com sucesso!")
+        return redirect('nucleos_lista')
+        
+    return render(request, 'confirmar_exclusao_nucleo.html', {'nucleo': nucleo})

@@ -10,7 +10,7 @@ from presentia.accounts.views import (
 )
 from presentia.churches.views import lista_igrejas, nova_igreja, editar_igreja, excluir_igreja
 from presentia.courses.views import (
-    lista_nucleos, novo_nucleo, lista_turmas, nova_turma, 
+    lista_nucleos, novo_nucleo, editar_nucleo, excluir_nucleo, lista_turmas, nova_turma, 
     editar_turma, excluir_turma, api_contar_turmas
 )
 from presentia.attendance.views import (
@@ -34,6 +34,8 @@ urlpatterns = [
     
     # Nucleos
     path('nucleos/', lista_nucleos, name='nucleos_lista'),
+    path('nucleos/<uuid:nucleo_id>/editar/', editar_nucleo, name='editar_nucleo'),
+    path('nucleos/<uuid:nucleo_id>/excluir/', excluir_nucleo, name='excluir_nucleo'),
     path('nucleos/novo/', novo_nucleo, name='nucleo_novo'),
     path('nucleos/<uuid:nucleo_id>/alunos/', alunos_nucleo, name='alunos_nucleo'),
     path('nucleos/<uuid:nucleo_id>/alunos/novo/', novo_aluno_nucleo, name='novo_aluno_nucleo'),

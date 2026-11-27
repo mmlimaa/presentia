@@ -1,0 +1,13 @@
+﻿{% extends "base.html" %}
+{% block title %}Excluir Núcleo{% endblock %}
+{% block content_logado %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-sm border border-gray-200 text-center mt-10">
+    <h3 class="text-xl font-bold text-gray-800 mb-2">Excluir Núcleo?</h3>
+    <p class="text-gray-500 mb-6">Tem certeza que deseja excluir o núcleo <strong>{{ nucleo.nome }}</strong>? Esta ação não pode ser desfeita.</p>
+    <form method="POST" class="flex justify-center gap-3">
+        {% csrf_token %}
+        <a href="{% url 'nucleos_lista' %}" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">Cancelar</a>
+        <button type="submit" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">Sim, Excluir</button>
+    </form>
+</div>
+{% endblock %}
